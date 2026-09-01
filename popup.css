@@ -1,0 +1,1113 @@
+/* ============================================================
+   MATHDECK — shadcn-inspired design system
+   Two-layer token architecture: brand → semantic → component
+   ============================================================ */
+
+/* ── 1. Brand palette ────────────────────────────────────── */
+:root {
+  /* Zinc neutral scale (shadcn zinc preset) */
+  --zinc-50:  #fafafa;
+  --zinc-100: #f4f4f5;
+  --zinc-200: #e4e4e7;
+  --zinc-300: #d4d4d8;
+  --zinc-400: #a1a1aa;
+  --zinc-500: #71717a;
+  --zinc-600: #52525b;
+  --zinc-700: #3f3f46;
+  --zinc-800: #27272a;
+  --zinc-900: #18181b;
+  --zinc-950: #09090b;
+
+  /* Violet accent (math-tool feel) */
+  --violet-50:  #f5f3ff;
+  --violet-100: #ede9fe;
+  --violet-200: #ddd6fe;
+  --violet-300: #c4b5fd;
+  --violet-400: #a78bfa;
+  --violet-500: #8b5cf6;
+  --violet-600: #7c3aed;
+  --violet-700: #6d28d9;
+  --violet-800: #5b21b6;
+  --violet-900: #4c1d95;
+}
+
+/* ── 2. Semantic light tokens ────────────────────────────── */
+:root {
+  color-scheme: light;
+
+  --background:         var(--zinc-50);
+  --foreground:         var(--zinc-950);
+  --card:               #ffffff;
+  --card-foreground:    var(--zinc-950);
+  --popover:            #ffffff;
+  --popover-foreground: var(--zinc-950);
+
+  --primary:            var(--violet-600);
+  --primary-foreground: #ffffff;
+  --secondary:          var(--zinc-100);
+  --secondary-foreground: var(--zinc-800);
+  --muted:              var(--zinc-100);
+  --muted-foreground:   var(--zinc-500);
+  --accent:             var(--zinc-100);
+  --accent-foreground:  var(--zinc-900);
+  --destructive:        #ef4444;
+
+  --border:             var(--zinc-200);
+  --input:              var(--zinc-200);
+  --ring:               var(--violet-500);
+
+  /* Key-specific */
+  --key-bg:             var(--zinc-100);
+  --key-bg-hover:       var(--zinc-200);
+  --key-fg:             var(--zinc-800);
+
+  /* Equation */
+  --equation-color:     var(--zinc-950);
+  --equation-size:      28px;
+
+  /* Radius scale (shadcn) */
+  --radius:    0.5rem;   /* 8px */
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* ── 3. Semantic dark tokens ─────────────────────────────── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background:         var(--zinc-950);
+  --foreground:         var(--zinc-50);
+  --card:               var(--zinc-900);
+  --card-foreground:    var(--zinc-50);
+  --popover:            var(--zinc-900);
+  --popover-foreground: var(--zinc-50);
+
+  --primary:            var(--violet-500);
+  --primary-foreground: #ffffff;
+  --secondary:          var(--zinc-800);
+  --secondary-foreground: var(--zinc-50);
+  --muted:              var(--zinc-800);
+  --muted-foreground:   var(--zinc-400);
+  --accent:             var(--zinc-800);
+  --accent-foreground:  var(--zinc-50);
+  --destructive:        #f87171;
+
+  --border:             var(--zinc-800);
+  --input:              var(--zinc-800);
+  --ring:               var(--violet-400);
+
+  --key-bg:             var(--zinc-800);
+  --key-bg-hover:       var(--zinc-700);
+  --key-fg:             var(--zinc-200);
+
+  --equation-color:     var(--zinc-50);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}
+
+/* ── 4. Reset & base ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 820px;
+  height: 620px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ── 5. Shell / layout grid ──────────────────────────────── */
+/*
+ * Layout: 620px total height
+ *   topbar       : 48px  (fixed)
+ *   keyboard-panel: 240px (fixed, scrollable — fits 3 groups × 4 rows)
+ *   custom-panel  : 54px  (fixed)
+ *   editor-panel  : 1fr   (takes remaining ~230px — editor + preview always visible)
+ *   action-bar    : 54px  (fixed)
+ *
+ * The keyboard panel is the ONLY section that scrolls.
+ * All other sections are always fully visible regardless of tab.
+ */
+.shell {
+  display: grid;
+  grid-template-rows: 48px 240px 54px 1fr 54px;
+  height: 620px;
+  background: var(--card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── 6. Top bar ──────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.app-logo svg {
+  width: 18px;
+  height: 18px;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── 7. Tab strip ────────────────────────────────────────── */
+.keyboard-tabs {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.keyboard-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.tab-button[aria-selected="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+}
+
+.tab-button .tab-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── 8. Keyboard panel ───────────────────────────────────── */
+.keyboard-panel {
+  /* fills the fixed 240px grid row exactly */
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 16px 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.keyboard-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.keyboard-panel::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
+.keyboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.key-group {
+  min-width: 0;
+}
+
+.key-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.key-group-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.key-group-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+/* ── 9. Key buttons ──────────────────────────────────────── */
+.key-button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 0;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--key-bg);
+  color: var(--key-fg);
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background 80ms ease, box-shadow 80ms ease, transform 60ms ease;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.key-button:hover {
+  background: var(--key-bg-hover);
+  box-shadow: var(--shadow);
+}
+
+.key-button:active {
+  transform: scale(0.95);
+  box-shadow: none;
+}
+
+/* Wide keys span full row */
+.wide-key {
+  grid-column: span 3;
+  height: 28px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--key-bg) 50%, transparent);
+  border: 1px solid var(--border);
+}
+
+.wide-key:hover {
+  background: var(--key-bg-hover);
+  color: var(--foreground);
+}
+
+/* Half-width key */
+.half-key {
+  grid-column: span 1;
+}
+
+/* Primary-accent key (e.g. matrix) */
+.key-button.accent-key {
+  background: color-mix(in srgb, var(--primary) 12%, var(--key-bg));
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.key-button.accent-key:hover {
+  background: color-mix(in srgb, var(--primary) 20%, var(--key-bg));
+}
+
+/* ── 10. Custom buttons row ──────────────────────────────── */
+.custom-panel {
+  /* fills the fixed 54px grid row exactly */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 16px;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.custom-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.custom-panel-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.custom-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.custom-key {
+  display: inline-grid;
+  place-items: center;
+  height: 30px;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--key-bg);
+  color: var(--key-fg);
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  transition: background 80ms ease;
+}
+
+.custom-key:hover {
+  background: var(--key-bg-hover);
+}
+
+.add-custom {
+  display: inline-grid;
+  place-items: center;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 16px;
+  font-weight: 400;
+  transition: border-color 80ms ease, color 80ms ease;
+}
+
+.add-custom:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ── 11. Editor panel ────────────────────────────────────── */
+.editor-panel {
+  /* Takes 1fr (~224px). Use flex so sub-rows don't overflow. */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  height: 32px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+/* Mode badge — a small pill that shows the current mode */
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.mode-badge[data-mode="text"] {
+  background: color-mix(in srgb, var(--primary) 12%, var(--muted));
+  color: var(--primary);
+}
+
+.mode-badge[data-mode="math"] {
+  background: color-mix(in srgb, #f97316 12%, var(--muted));
+  color: #c2410c;
+}
+
+:root[data-theme="dark"] .mode-badge[data-mode="math"] {
+  color: #fb923c;
+}
+
+/* Save state badge — flows at the right end of the editor toolbar flex row */
+.save-state {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.save-state.unsaved {
+  color: var(--primary);
+}
+
+/* MathLive editor — grows to fill available space between toolbar and preview */
+.equation-editor {
+  flex: 1 1 0;
+  min-height: 48px;
+  margin: 6px 12px 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input);
+  background: var(--card);
+  color: var(--equation-color);
+  font-size: var(--equation-size);
+  line-height: 1.4;
+  overflow: auto;
+  /* MathLive text-zone highlight — subtle violet tint shows text segments */
+  --highlight-text: color-mix(in srgb, var(--primary) 7%, transparent);
+  --text-font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.equation-editor:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+math-field::part(virtual-keyboard-toggle),
+math-field::part(menu-toggle) {
+  display: none;
+}
+
+/* ── 12. Preview box (mixed text+math) ───────────────────── */
+.preview-section {
+  flex-shrink: 0;
+  height: 56px;
+  padding: 4px 12px 6px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.preview-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.equation-preview {
+  flex: 1;
+  min-height: 0;
+  padding: 3px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 40%, var(--card));
+  color: var(--equation-color);
+  font-size: calc(var(--equation-size) * 0.72);
+  overflow: hidden;
+}
+
+/* ── 13. Action / footer bar ─────────────────────────────── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 100%;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  gap: 8px;
+  overflow: hidden;
+}
+
+.action-left,
+.action-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-center {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+/* ── 14. Button variants ─────────────────────────────────── */
+
+/* Ghost icon button */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.icon-btn:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.icon-btn:active {
+  background: var(--key-bg-hover);
+}
+
+/* Outline action button */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 100ms ease, border-color 100ms ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.action-btn:hover {
+  background: var(--accent);
+  border-color: var(--ring);
+}
+
+/* Primary filled button */
+.action-btn.primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.action-btn.primary:hover {
+  background: color-mix(in srgb, var(--primary) 88%, #000);
+  border-color: color-mix(in srgb, var(--primary) 88%, #000);
+}
+
+/* Destructive / new */
+.action-btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+
+.action-btn.ghost:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+/* ── 15. Toast notification ──────────────────────────────── */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%) translateY(6px);
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  background: var(--zinc-900);
+  color: var(--zinc-50);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  z-index: 100;
+}
+
+:root[data-theme="dark"] .toast {
+  background: var(--zinc-100);
+  color: var(--zinc-900);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── 16. Dialogs ─────────────────────────────────────────── */
+.settings-dialog,
+.custom-dialog,
+.matrix-dialog {
+  width: min(480px, calc(100vw - 32px));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xl);
+  background: transparent;
+  box-shadow: var(--shadow-lg);
+  color: var(--foreground);
+}
+
+.settings-dialog::backdrop,
+.custom-dialog::backdrop,
+.matrix-dialog::backdrop {
+  background: rgba(0 0 0 / 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.dialog-card {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  color: var(--card-foreground);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--card-foreground);
+}
+
+.dialog-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 18px;
+  transition: background 100ms ease;
+}
+
+.dialog-close:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+/* Setting rows */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+
+.setting-row:last-of-type {
+  border-bottom: none;
+}
+
+.setting-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--card-foreground);
+}
+
+.setting-hint {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 1px;
+}
+
+/* Segmented control */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--muted);
+}
+
+.segmented button {
+  height: 30px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.segmented button:hover:not(.is-active) {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.segmented button.is-active {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Color swatches */
+.swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--swatch-color);
+  box-shadow: 0 0 0 1px var(--border);
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+
+.swatch:hover {
+  transform: scale(1.1);
+}
+
+.swatch.is-active {
+  box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--primary);
+}
+
+/* Range slider */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+  height: 4px;
+}
+
+.slider-output {
+  min-width: 24px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.settings-note {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--primary) 8%, var(--muted));
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Custom button dialog */
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.field-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+.dialog-action-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* ── 17. Matrix builder dialog ───────────────────────────── */
+.matrix-dialog {
+  width: min(440px, calc(100vw - 32px));
+}
+
+.matrix-size-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.matrix-size-row label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+
+.matrix-dim-input {
+  width: 52px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 150ms ease;
+}
+
+.matrix-dim-input:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+.matrix-dim-sep {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.matrix-type-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.matrix-type-btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  transition: all 100ms ease;
+}
+
+.matrix-type-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.matrix-type-btn.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.matrix-grid-preview {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  overflow: auto;
+  max-height: 200px;
+}
+
+.matrix-cell {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  text-align: center;
+  transition: border-color 100ms ease;
+}
+
+.matrix-cell:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+/* ── 18. Collapse animation ──────────────────────────────── */
+.keyboard-panel.is-collapsed {
+  display: none;
+}
+
+.collapse-btn {
+  transition: transform 200ms ease;
+}
+
+.collapse-btn.is-open {
+  transform: rotate(180deg);
+}
+
+/* ── 19. Scrollbar polish ────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
+/* ── 20. Badge (e.g. keyboard count indicator) ───────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ── 21. Tooltip hint on key hover ───────────────────────── */
+.key-button[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--zinc-900);
+  color: var(--zinc-50);
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 50;
+}
+
+.key-button[data-hint]:hover::after {
+  opacity: 1;
+}

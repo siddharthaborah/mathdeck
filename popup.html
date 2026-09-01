@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mathdeck Keyboard</title>
+    <link rel="stylesheet" href="node_modules/mathlive/mathlive-static.css" />
+    <link rel="stylesheet" href="node_modules/mathlive/mathlive-fonts.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell" id="app">
+
+      <!-- ── Top bar ─────────────────────────────────────── -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <!-- Logo -->
+          <div class="app-logo" aria-hidden="true">
+            <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="18" height="18" rx="4" fill="currentColor" fill-opacity="0.15"/>
+              <path d="M4 13 L7 5 L9 10 L11 7 L14 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            Mathdeck
+          </div>
+          <div class="topbar-divider" aria-hidden="true"></div>
+          <!-- Tab strip -->
+          <div class="keyboard-tabs" role="tablist" aria-label="Keyboard type"></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+          <button class="icon-btn collapse-btn" type="button" id="collapseBtn"
+                  title="Toggle keyboard" aria-label="Toggle keyboard" aria-expanded="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 5 L7 10 L12 5" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- ── Keyboard panel ─────────────────────────────── -->
+      <section class="keyboard-panel" id="keyboardPanel" aria-label="Math keys">
+        <div class="keyboard-grid" id="keyboardGrid"></div>
+      </section>
+
+      <!-- ── Custom buttons row ────────────────────────── -->
+      <section class="custom-panel" aria-label="Custom buttons">
+        <div class="custom-panel-header">
+          <span class="custom-panel-title">Custom</span>
+        </div>
+        <div class="custom-row" id="customRow"></div>
+      </section>
+
+      <!-- ── Editor panel ───────────────────────────────── -->
+      <section class="editor-panel" aria-label="Equation editor">
+        <div class="editor-toolbar">
+          <button class="icon-btn" data-action="undo" type="button" title="Undo (Ctrl+Z)" aria-label="Undo">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7 C2 4.24 4.24 2 7 2 C9.76 2 12 4.24 12 7 C12 9.76 9.76 12 7 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M2 7 L2 4 L5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="icon-btn" data-action="redo" type="button" title="Redo (Ctrl+Y)" aria-label="Redo">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M12 7 C12 4.24 9.76 2 7 2 C4.24 2 2 4.24 2 7 C2 9.76 4.24 12 7 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M12 7 L12 4 L9 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <div class="editor-toolbar-sep"></div>
+
+          <!-- Mode toggle: shows current mode (Text / Math), click to switch -->
+          <button class="icon-btn" data-action="toggle-mode" type="button"
+                  title="Currently in Text mode — click or Alt+= to switch to Math"
+                  aria-label="Switch to math mode" id="modeToggle">
+            <!-- Filled by updateModeIndicator() in popup.js -->
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <text x="2" y="11" font-size="10" font-weight="800" fill="currentColor"
+                    font-family="Inter,sans-serif">T</text>
+              <circle cx="11" cy="4" r="2" fill="currentColor" opacity="0.4"/>
+            </svg>
+          </button>
+          <!-- Live mode indicator pill -->
+          <span class="mode-badge" id="modeBadge" data-mode="text" aria-live="polite">Text</span>
+
+          <button class="icon-btn" data-action="clear" type="button"
+                  title="Clear equation" aria-label="Clear equation">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+
+          <div style="flex:1"></div>
+          <span class="save-state" id="saveState">Saved</span>
+        </div>
+
+        <!-- Math field -->
+        <math-field
+          class="equation-editor"
+          id="equationEditor"
+          aria-label="Equation editor"
+        ></math-field>
+
+        <!-- Preview -->
+        <div class="preview-section">
+          <div class="preview-label">Preview</div>
+          <math-field
+            class="equation-preview"
+            id="equationPreview"
+            aria-label="Live equation preview"
+            read-only
+          ></math-field>
+        </div>
+      </section>
+
+      <!-- ── Action bar ──────────────────────────────────── -->
+      <footer class="action-bar">
+        <div class="action-left">
+          <button class="icon-btn" data-action="history" type="button"
+                  title="Recent equations" aria-label="Recent equations">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M7 4 L7 7 L9.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="icon-btn" data-action="favorite" type="button"
+                  title="Favorite" aria-label="Favorite">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2 L8.5 5.5 L12.5 5.5 L9.5 7.8 L10.8 11.5 L7 9.2 L3.2 11.5 L4.5 7.8 L1.5 5.5 L5.5 5.5 Z"
+                    stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="action-center">
+          <button class="action-btn ghost" data-action="new" type="button" title="New equation">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2 V10 M2 6 H10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            New
+          </button>
+          <button class="action-btn" data-action="copy-image" type="button">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <rect x="3" y="1" width="7" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="1" y="3" width="7" height="8" rx="1" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity="0.08"/>
+            </svg>
+            Image
+          </button>
+          <button class="action-btn" data-action="copy-latex" type="button">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 4 C2 2.9 2.9 2 4 2 H8 C9.1 2 10 2.9 10 4 V8 C10 9.1 9.1 10 8 10 H4 C2.9 10 2 9.1 2 8 Z"
+                    stroke="currentColor" stroke-width="1.3"/>
+              <path d="M4.5 5 L3.5 6 L4.5 7 M7.5 5 L8.5 6 L7.5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            LaTeX
+          </button>
+          <button class="action-btn" data-action="copy-typst" type="button">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 3 H10 M5 3 V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Typst
+          </button>
+          <button class="action-btn primary" data-action="insert" type="button">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6 H8 M6 4 L8 6 L6 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 2 V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Insert
+          </button>
+        </div>
+
+        <div class="action-right">
+          <button class="icon-btn" data-action="settings" type="button"
+                  title="Settings" aria-label="Settings">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M7 1 V3 M7 11 V13 M1 7 H3 M11 7 H13 M2.93 2.93 L4.34 4.34 M9.66 9.66 L11.07 11.07 M11.07 2.93 L9.66 4.34 M4.34 9.66 L2.93 11.07"
+                    stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="icon-btn" data-action="help" type="button"
+                  title="Help" aria-label="Help">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M5.5 5.5 C5.5 4.67 6.17 4 7 4 C7.83 4 8.5 4.67 8.5 5.5 C8.5 6.33 7 7 7 7.5"
+                    stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="7" cy="9.5" r="0.6" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </footer>
+
+      <!-- ── Toast ────────────────────────────────────────── -->
+      <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- Settings dialog                                     -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <dialog class="settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+      <div class="dialog-card">
+        <div class="dialog-head">
+          <h2 class="dialog-title" id="settingsTitle">Settings</h2>
+          <button class="dialog-close" id="settingsClose" type="button"
+                  title="Close" aria-label="Close settings">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Theme</div>
+          </div>
+          <span class="segmented" role="group" aria-label="Theme">
+            <button type="button" data-theme="light">☼ Light</button>
+            <button type="button" data-theme="auto">Auto</button>
+            <button type="button" data-theme="dark">☾ Dark</button>
+          </span>
+        </div>
+
+        <div class="setting-row color-setting">
+          <div>
+            <div class="setting-label">Equation color</div>
+          </div>
+          <div class="swatches" id="swatches" aria-label="Equation font color"></div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Font size</div>
+            <div class="setting-hint">Affects editor, preview, and exported image</div>
+          </div>
+          <div class="slider-row">
+            <input id="fontSize" type="range" min="5" max="13" step="1"
+                   aria-label="Font size" />
+            <output class="slider-output" id="fontSizeOutput" for="fontSize">9</output>
+          </div>
+        </div>
+
+        <p class="settings-note">
+          Color and size apply to the rendered equation, the copied PNG image, and LaTeX output.
+        </p>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- Custom button dialog                                -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <dialog class="custom-dialog" id="customDialog" aria-labelledby="customTitle">
+      <div class="dialog-card">
+        <div class="dialog-head">
+          <h2 class="dialog-title" id="customTitle">Custom Button</h2>
+          <button class="dialog-close" id="customClose" type="button"
+                  title="Close" aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label" for="customLabel">Label (shown on button)</label>
+          <input class="field-input" id="customLabel" type="text"
+                 maxlength="10" placeholder="e.g. argmax" autocomplete="off" />
+        </div>
+        <div class="field-row">
+          <label class="field-label" for="customValue">LaTeX</label>
+          <input class="field-input" id="customValue" type="text"
+                 placeholder="e.g. \arg\max" autocomplete="off" />
+        </div>
+
+        <div class="dialog-action-row">
+          <button class="action-btn ghost" id="customCancel" type="button">Cancel</button>
+          <button class="action-btn primary" id="saveCustom" type="button">Save Button</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- Matrix builder dialog                               -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <dialog class="matrix-dialog" id="matrixDialog" aria-labelledby="matrixTitle">
+      <div class="dialog-card">
+        <div class="dialog-head">
+          <h2 class="dialog-title" id="matrixTitle">Build Matrix</h2>
+          <button class="dialog-close" id="matrixClose" type="button"
+                  title="Close" aria-label="Close matrix builder">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Size picker -->
+        <div class="matrix-size-row">
+          <label for="matrixRows">Rows</label>
+          <input class="matrix-dim-input" id="matrixRows" type="number"
+                 min="1" max="8" value="2" aria-label="Number of rows" />
+          <span class="matrix-dim-sep">×</span>
+          <label for="matrixCols">Cols</label>
+          <input class="matrix-dim-input" id="matrixCols" type="number"
+                 min="1" max="8" value="2" aria-label="Number of columns" />
+        </div>
+
+        <!-- Bracket type -->
+        <div class="matrix-type-row" id="matrixTypeRow" role="group" aria-label="Matrix bracket type">
+          <button class="matrix-type-btn is-active" data-env="pmatrix" type="button">( )</button>
+          <button class="matrix-type-btn" data-env="bmatrix" type="button">[ ]</button>
+          <button class="matrix-type-btn" data-env="Bmatrix" type="button">{ }</button>
+          <button class="matrix-type-btn" data-env="vmatrix" type="button">| |</button>
+          <button class="matrix-type-btn" data-env="Vmatrix" type="button">‖ ‖</button>
+          <button class="matrix-type-btn" data-env="matrix" type="button">plain</button>
+        </div>
+
+        <!-- Cell grid for optional fill -->
+        <div class="matrix-grid-preview" id="matrixGridPreview"
+             aria-label="Matrix cell input grid"></div>
+
+        <div class="dialog-action-row">
+          <button class="action-btn ghost" id="matrixCancel" type="button">Cancel</button>
+          <button class="action-btn primary" id="insertMatrix" type="button">Insert Matrix</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

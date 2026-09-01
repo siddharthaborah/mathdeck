@@ -60,7 +60,7 @@ const KEYBOARDS = {
         ["∞",   "\\infty",          "infinity"],
         ["°",   "^\\circ",          "degree"],
         ["%",   "\\%",              "%"],
-        ["‰",   "\\permil",         "permil"],
+        ["‰",   "\\unicode{\"2030}",  "permil",       "per mille"],
         ["∴",   "\\therefore",      "therefore"],
         ["∵",   "\\because",        "because"],
         ["⟹",  "\\implies",        "=>",           "implies"],

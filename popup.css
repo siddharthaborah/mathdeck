@@ -126,7 +126,7 @@
 
 html, body {
   width: 820px;
-  height: 620px;
+  height: 680px;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -157,20 +157,17 @@ button:focus-visible {
 
 /* ── 5. Shell / layout grid ──────────────────────────────── */
 /*
- * Layout: 620px total height
- *   topbar       : 48px  (fixed)
- *   keyboard-panel: 240px (fixed, scrollable — fits 3 groups × 4 rows)
- *   custom-panel  : 54px  (fixed)
- *   editor-panel  : 1fr   (takes remaining ~230px — editor + preview always visible)
- *   action-bar    : 54px  (fixed)
- *
- * The keyboard panel is the ONLY section that scrolls.
- * All other sections are always fully visible regardless of tab.
+ * Layout: 680px total height
+ *   topbar        : 48px   (fixed)
+ *   keyboard-panel: 270px  (fixed, scrollable)
+ *   custom-panel  : 52px   (fixed)
+ *   editor-panel  : 1fr    (~256px — editor + preview always visible)
+ *   action-bar    : 52px   (fixed)
  */
 .shell {
   display: grid;
-  grid-template-rows: 48px 240px 54px 1fr 54px;
-  height: 620px;
+  grid-template-rows: 48px 270px 52px 1fr 52px;
+  height: 680px;
   background: var(--card);
   position: relative;
   overflow: hidden;
@@ -268,11 +265,11 @@ button:focus-visible {
 
 /* ── 8. Keyboard panel ───────────────────────────────────── */
 .keyboard-panel {
-  /* fills the fixed 240px grid row exactly */
+  /* fills the fixed 270px grid row exactly */
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px 16px 6px;
+  padding: 8px 14px 6px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -289,7 +286,7 @@ button:focus-visible {
 .keyboard-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .key-group {
@@ -300,15 +297,16 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .key-group-title {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--muted-foreground);
+  white-space: nowrap;
 }
 
 .key-group-line {
@@ -320,7 +318,7 @@ button:focus-visible {
 .keys {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 3px;
 }
 
 /* ── 9. Key buttons ──────────────────────────────────────── */
@@ -328,13 +326,13 @@ button:focus-visible {
   display: inline-grid;
   place-items: center;
   min-width: 0;
-  height: 36px;
-  padding: 0 6px;
+  height: 32px;
+  padding: 0 4px;
   border-radius: var(--radius-sm);
   background: var(--key-bg);
   color: var(--key-fg);
   font-family: "Cambria Math", Cambria, Georgia, serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1;
   transition: background 80ms ease, box-shadow 80ms ease, transform 60ms ease;
@@ -356,9 +354,9 @@ button:focus-visible {
 /* Wide keys span full row */
 .wide-key {
   grid-column: span 3;
-  height: 28px;
+  height: 24px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--muted-foreground);
@@ -423,13 +421,13 @@ button:focus-visible {
 .custom-key {
   display: inline-grid;
   place-items: center;
-  height: 30px;
+  height: 28px;
   padding: 0 4px;
   border-radius: var(--radius-sm);
   background: var(--key-bg);
   color: var(--key-fg);
   font-family: "Cambria Math", Cambria, Georgia, serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   box-shadow: var(--shadow-sm);
   transition: background 80ms ease;
@@ -442,12 +440,12 @@ button:focus-visible {
 .add-custom {
   display: inline-grid;
   place-items: center;
-  height: 30px;
+  height: 28px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--border);
   background: transparent;
   color: var(--muted-foreground);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   transition: border-color 80ms ease, color 80ms ease;
 }
@@ -532,15 +530,15 @@ button:focus-visible {
 /* MathLive editor — grows to fill available space between toolbar and preview */
 .equation-editor {
   flex: 1 1 0;
-  min-height: 48px;
+  min-height: 56px;
   margin: 6px 12px 0;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--input);
   background: var(--card);
   color: var(--equation-color);
   font-size: var(--equation-size);
-  line-height: 1.4;
+  line-height: 1.45;
   overflow: auto;
   /* MathLive text-zone highlight — subtle violet tint shows text segments */
   --highlight-text: color-mix(in srgb, var(--primary) 7%, transparent);
@@ -561,12 +559,12 @@ math-field::part(menu-toggle) {
 /* ── 12. Preview box (mixed text+math) ───────────────────── */
 .preview-section {
   flex-shrink: 0;
-  height: 56px;
+  height: 72px;
   padding: 4px 12px 6px;
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   overflow: hidden;
 }
 
@@ -583,12 +581,12 @@ math-field::part(menu-toggle) {
 .equation-preview {
   flex: 1;
   min-height: 0;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--muted) 40%, var(--card));
   color: var(--equation-color);
-  font-size: calc(var(--equation-size) * 0.72);
+  font-size: calc(var(--equation-size) * 0.78);
   overflow: hidden;
 }
 

@@ -1054,126 +1054,106 @@ async function copyImage() {
 }
 
 /**
- * Renders a LaTeX string to a PNG Blob using MathLive's convertLatexToMarkup.
- * The typeset HTML is embedded inside an SVG <foreignObject> and drawn onto
- * a canvas — no external libraries required, works in Chrome extensions.
+ * Renders a LaTeX string to a crisp PNG Blob.
  *
- * Steps:
- *  1. convertLatexToMarkup() → typeset HTML (real math glyphs, not raw LaTeX)
- *  2. Inject into a hidden off-screen container to measure natural size
- *  3. Embed that container's outerHTML into an SVG <foreignObject>
- *  4. Draw the SVG onto a <canvas> via an Image element
- *  5. Export canvas as PNG blob
+ * Uses MathLive's convertLatexToMarkup() to get properly typeset HTML,
+ * inlines @font-face rules from the already-loaded document stylesheets,
+ * wraps everything in an SVG <foreignObject>, draws to a 2× DPR canvas,
+ * and exports as PNG. Fonts work because they're already loaded in the
+ * extension popup's document — we just re-declare them so the SVG blob
+ * renderer can access them.
  */
 async function renderEquationToPng(latex) {
   const { convertLatexToMarkup } = await import("./node_modules/mathlive/mathlive.min.mjs");
 
-  // 1. Build the typeset HTML for this LaTeX
+  const PAD      = 32;
+  const DPR      = 2;
+  const fontSize = state.fontSize * 4;
+  const color    = state.fontColor;
+
+  // 1. Typeset HTML
   const mathHtml = convertLatexToMarkup(latex, { mathstyle: "displaystyle" });
 
-  // Padding around the equation in the output image
-  const PAD  = 24;
-  const scale = Math.max(1.5, state.fontSize / 6); // scale up relative to font size setting
-
-  // 2. Measure natural rendered size using an off-screen element
+  // 2. Measure rendered size in DOM (fonts already loaded here)
   const probe = document.createElement("div");
-  probe.style.cssText = [
-    "position:fixed",
-    "left:-9999px",
-    "top:-9999px",
-    "visibility:hidden",
-    `font-size:${state.fontSize * 3}px`,
-    "color:" + state.fontColor,
-    "background:white",
-    "padding:" + PAD + "px",
-    "display:inline-block",
-    "white-space:nowrap",
-    "line-height:1.4",
-  ].join(";");
+  Object.assign(probe.style, {
+    position: "fixed", left: "-9999px", top: "0",
+    fontSize: `${fontSize}px`, color, background: "white",
+    display: "inline-block", padding: `${PAD}px`,
+    whiteSpace: "nowrap", lineHeight: "1.5", visibility: "hidden",
+  });
   probe.innerHTML = mathHtml;
   document.body.appendChild(probe);
-
-  // Wait a tick for layout
   await new Promise((r) => requestAnimationFrame(r));
-
-  const rect   = probe.getBoundingClientRect();
-  const rawW   = Math.ceil(rect.width)  || 400;
-  const rawH   = Math.ceil(rect.height) || 120;
+  await new Promise((r) => requestAnimationFrame(r));
+  const { width: rw, height: rh } = probe.getBoundingClientRect();
   document.body.removeChild(probe);
+  const W = Math.max(300, Math.ceil(rw));
+  const H = Math.max(100, Math.ceil(rh));
 
-  const W = Math.round(rawW  * scale);
-  const H = Math.round(rawH  * scale);
-
-  // 3. Build the outer HTML to embed — must be self-contained XHTML
-  //    We inline the MathLive static CSS as a <style> block inside the SVG
-  //    so fonts and layout classes render correctly.
-  const styleEl = document.querySelector('link[href*="mathlive-static"]');
-  let inlineStyle = "";
+  // 3. Collect @font-face rules from loaded stylesheets
+  let fontFaces = "";
   try {
-    if (styleEl) {
-      // Fetch and inline the CSS so foreignObject renders correctly
-      const resp = await fetch(styleEl.href);
-      inlineStyle = await resp.text();
+    for (const sheet of document.styleSheets) {
+      let rules;
+      try { rules = sheet.cssRules; } catch { continue; }
+      for (const rule of rules) {
+        if (rule instanceof CSSFontFaceRule) fontFaces += rule.cssText + "\n";
+      }
     }
-  } catch { /* if fetch fails, render without custom CSS — still readable */ }
+  } catch { /* non-critical */ }
 
-  const xhtmlDoc = `
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<style>
-${inlineStyle}
-body,div{margin:0;padding:0;box-sizing:border-box;}
-.ML__container{
-  display:inline-block;
-  font-size:${state.fontSize * 3}px;
-  color:${state.fontColor};
-  padding:${PAD}px;
-  background:white;
-  white-space:nowrap;
-  line-height:1.4;
-}
-</style>
-</head>
-<body>
-<div class="ML__container">${mathHtml}</div>
-</body>
-</html>`.trim();
+  // 4. Build self-contained XHTML for foreignObject
+  const xhtml = `<html xmlns="http://www.w3.org/1999/xhtml"><head><style>
+${fontFaces}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{width:${W}px;height:${H}px;background:white;
+  display:flex;align-items:center;justify-content:center;
+  font-size:${fontSize}px;color:${color};}
+</style></head><body>
+<div style="padding:${PAD}px;white-space:nowrap;line-height:1.5;">${mathHtml}</div>
+</body></html>`;
 
-  // 4. Wrap in SVG foreignObject
-  const svgSrc = `<svg xmlns="http://www.w3.org/2000/svg"
-    width="${W}" height="${H}"
-    viewBox="0 0 ${W} ${H}">
-  <rect width="100%" height="100%" rx="12" fill="white"/>
-  <foreignObject x="0" y="0" width="${W}" height="${H}">
-    ${xhtmlDoc}
-  </foreignObject>
-</svg>`;
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+<rect width="${W}" height="${H}" rx="10" fill="white"/>
+<foreignObject x="0" y="0" width="${W}" height="${H}">${xhtml}</foreignObject></svg>`;
 
-  // 5. Render SVG → canvas → PNG blob
+  // 5. SVG → canvas → PNG
   return new Promise((resolve, reject) => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(DPR, DPR);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
+
     const img  = new Image();
-    const blob = new Blob([svgSrc], { type: "image/svg+xml;charset=utf-8" });
+    const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
     const url  = URL.createObjectURL(blob);
 
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      // Render at 2× for crisp high-DPI output
-      const DPR    = 2;
-      canvas.width  = W * DPR;
-      canvas.height = H * DPR;
-      const ctx = canvas.getContext("2d");
-      ctx.scale(DPR, DPR);
-      // White background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, W, H);
       ctx.drawImage(img, 0, 0, W, H);
       URL.revokeObjectURL(url);
       canvas.toBlob(
-        (png) => png ? resolve(png) : reject(new Error("canvas.toBlob failed")),
+        (png) => png ? resolve(png) : reject(new Error("toBlob failed")),
         "image/png"
       );
     };
-    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+
+    // Fallback: draw as plain styled text (always readable)
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      ctx.font = `${fontSize}px "Cambria Math", Cambria, Georgia, serif`;
+      ctx.fillStyle = color;
+      ctx.textBaseline = "middle";
+      ctx.fillText(latex, PAD, H / 2);
+      canvas.toBlob(
+        (png) => png ? resolve(png) : reject(new Error("fallback failed")),
+        "image/png"
+      );
+    };
+
     img.src = url;
   });
 }

@@ -1,25 +1,29 @@
 # Mathdeck Keyboard
 
-A Manifest V3 Chrome extension prototype for a compact math keyboard based on the supplied design references.
+A Chrome extension for writing and inserting math equations — pure HTML/CSS/JS, no build step.
 
-## Load locally
+## Install locally
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Click **Load unpacked**.
-4. Select this folder: `C:\Users\siddh\Downloads\Mathdeck`.
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked** and select this folder
 
-## Current features
+## Features
 
-- Six keyboard tabs: Basic, Pure math, Statistics, Physics, Chemistry, and Graph.
-- Editable equation area with undo, redo, saved state, and recent equation recall.
-- Custom buttons stored locally with `chrome.storage.local`.
-- Settings for light, dark, auto theme, equation color, and equation size.
-- Copy as text LaTeX, Typst-style text, or PNG image.
-- Insert into the active page when an input, textarea, or contenteditable target is focused. If insertion is blocked or no field is found, Mathdeck copies the equation to the clipboard.
+- **6 keyboard tabs** — Basic, Algebra, Calculus, Pure Math, Statistics, Physics
+- **Mixed text + math** — write full sentences with inline equations (like a textbook)
+- **Matrix builder** — any size up to 8×8 with 6 bracket types
+- **200+ keys** covering all standard mathematical and physical notation
+- **Copy as** LaTeX, Typst, or PNG image
+- **Insert into page** — injects directly into any focused input or contenteditable
+- **Custom buttons** — 10 user-defined slots
+- **Undo / redo**, equation history, light/dark/auto theme, font color and size settings
 
-## Implementation notes
+## Usage
 
-- The extension is intentionally vanilla HTML/CSS/JS, so no install or build step is required.
-- It uses Manifest V3 permissions recommended by Chrome docs: `activeTab`, `scripting`, `storage`, and `clipboardWrite`.
-- Page insertion is best-effort because opening a popup can move focus away from the page in some Chrome contexts.
+Type prose in **Text mode** (spaces work normally). Press **Alt+=** or click the mode button to switch to **Math mode** for equations. Click any keyboard key to insert notation at the cursor — works mid-sentence without breaking your text.
+
+## Stack
+
+- [MathLive](https://mathlive.io) for the math field and rendering
+- Manifest V3 — permissions: `activeTab`, `scripting`, `storage`, `clipboardWrite`

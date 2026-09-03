@@ -9,6 +9,7 @@ const requiredFiles = [
   "dist/popup.js",
   "dist/mathlive/mathlive-static.css",
   "dist/mathlive/mathlive-fonts.css",
+  "dist/sounds/plonk.wav",
 ];
 
 test("build contains a loadable extension", async () => {

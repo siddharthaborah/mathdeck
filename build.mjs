@@ -35,5 +35,6 @@ await mkdir(resolve(dist, "mathlive", "fonts"), { recursive: true });
 await cp(resolve(mathlive, "mathlive-static.css"), resolve(dist, "mathlive", "mathlive-static.css"));
 await cp(resolve(mathlive, "mathlive-fonts.css"), resolve(dist, "mathlive", "mathlive-fonts.css"));
 await cp(resolve(mathlive, "fonts"), resolve(dist, "mathlive", "fonts"), { recursive: true });
+await cp(resolve(mathlive, "sounds"), resolve(dist, "sounds"), { recursive: true });
 
 console.log(`Built extension in ${dist}`);

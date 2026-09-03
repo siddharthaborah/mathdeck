@@ -780,7 +780,6 @@ function renderKeyboard() {
 
       // Special: matrix builder trigger
       if (latex === "__MATRIX__") {
-        btn.className = "key-button accent-key";
         btn.textContent = "Matrix";
         btn.dataset.action = "open-matrix";
         keysDiv.append(btn);

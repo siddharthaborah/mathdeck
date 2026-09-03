@@ -869,9 +869,12 @@ function applyTheme() {
   const resolved    = state.theme === "auto"
     ? (prefersDark ? "dark" : "light")
     : state.theme;
+  const equationColor = state.fontColor === "#09090b" && resolved === "dark"
+    ? "#ffffff"
+    : state.fontColor;
 
   document.documentElement.dataset.theme = resolved;
-  document.documentElement.style.setProperty("--equation-color", state.fontColor);
+  document.documentElement.style.setProperty("--equation-color", equationColor);
   document.documentElement.style.setProperty("--equation-size",  `${state.fontSize * 3}px`);
 }
 

@@ -27,6 +27,8 @@ await writeFile(
 );
 await cp(resolve(root, "popup.css"), resolve(dist, "popup.css"));
 await cp(resolve(root, "manifest.json"), resolve(dist, "manifest.json"));
+await mkdir(resolve(dist, "icons"), { recursive: true });
+await cp(resolve(root, "icons", "mathdeck.svg"), resolve(dist, "icons", "mathdeck.svg"));
 await mkdir(resolve(dist, "mathlive", "fonts"), { recursive: true });
 await cp(resolve(mathlive, "mathlive-static.css"), resolve(dist, "mathlive", "mathlive-static.css"));
 await cp(resolve(mathlive, "mathlive-fonts.css"), resolve(dist, "mathlive", "mathlive-fonts.css"));

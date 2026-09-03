@@ -12,8 +12,11 @@ const STORAGE_KEY = "mathdeck-state-v2";
 
 const storage = globalThis.chrome?.storage?.local ?? {
   async get() { return {}; },
-  set() {}
+  async set() {}
 };
+
+const VALID_THEMES = new Set(["light", "dark", "auto"]);
+const MAX_HISTORY = 20;
 
 // ─── Tab definitions (chemistry + graph removed) ─────────────────────────────
 
@@ -83,6 +86,30 @@ const KEYBOARDS = {
         ["[]",  "\\left[□\\right]", "[□]"],
         ["{}",  "\\left\\{□\\right\\}","brace(□)"],
         ["log", "\\log\\left(□\\right)","log(□)"],
+      ]
+    },
+    {
+      title: "Relations & Arrows",
+      keys: [
+        ["≪", "\\ll", "<<"], ["≫", "\\gg", ">>"], ["≲", "\\lesssim", "less.sim"],
+        ["≳", "\\gtrsim", "gtr.sim"], ["∼", "\\sim", "sim"], ["≁", "\\nsim", "sim.not"],
+        ["↦", "\\mapsto", "|->"], ["→", "\\to", "->"], ["←", "\\leftarrow", "<-"],
+        ["↔", "\\leftrightarrow", "<->"], ["⇒", "\\Rightarrow", "=>"], ["⇐", "\\Leftarrow", "<="],
+        ["⇔", "\\Leftrightarrow", "<=>"], ["↗", "\\nearrow", "arrow.ne"], ["↘", "\\searrow", "arrow.se"],
+      ]
+    },
+    {
+      title: "More Arrows",
+      keys: [
+        ["↠", "\\twoheadrightarrow", ">>->"], ["↞", "\\twoheadleftarrow", "<-<<"],
+        ["↣", "\\rightarrowtail", "|->"], ["↢", "\\leftarrowtail", "<-|"],
+        ["⇢", "\\dashrightarrow", "dash.arrow.r"], ["⇠", "\\dashleftarrow", "dash.arrow.l"],
+        ["⟶", "\\longrightarrow", "long ->"], ["⟷", "\\longleftrightarrow", "long <->"],
+        ["⟹", "\\Longrightarrow", "long =>"], ["⟸", "\\Longleftarrow", "long <="],
+        ["⟺", "\\Longleftrightarrow", "long <=>"], ["⟼", "\\longmapsto", "long |->"],
+        ["↑", "\\uparrow", "arrow.u"], ["↓", "\\downarrow", "arrow.d"],
+        ["↕", "\\updownarrow", "arrow.ud"], ["⇑", "\\Uparrow", "arrow.u.double"],
+        ["⇓", "\\Downarrow", "arrow.d.double"], ["⇕", "\\Updownarrow", "arrow.ud.double"],
       ]
     },
   ],
@@ -161,6 +188,16 @@ const KEYBOARDS = {
         ["Ω",  "\\Omega",   "Omega"],
       ]
     },
+    {
+      title: "Advanced Algebra",
+      keys: [
+        ["arg", "\\arg", "arg"], ["det", "\\det", "det"], ["dim", "\\dim", "dim"],
+        ["ker", "\\ker", "ker"], ["hom", "\\hom", "hom"], ["min", "\\min", "min"],
+        ["max", "\\max", "max"], ["sup", "\\sup", "sup"], ["inf", "\\inf", "inf"],
+        ["Re", "\\Re", "Re"], ["Im", "\\Im", "Im"], ["conj", "\\overline{□}", "overline(□)"],
+        ["a|b", "a\\mid b", "a | b"], ["a∤b", "a\\nmid b", "a !| b"], ["≪", "\\ll", "<<"],
+      ]
+    },
   ],
 
   // ── Calculus ──────────────────────────────────────────────────────────────
@@ -216,6 +253,28 @@ const KEYBOARDS = {
         ["n!",        "□!",                                         "□!"],
       ]
     },
+    {
+      title: "Transforms & Operators",
+      keys: [
+        ["ℒ", "\\mathcal{L}", "cal(L)"], ["ℱ", "\\mathcal{F}", "cal(F)"],
+        ["Re", "\\operatorname{Re}", "Re"], ["Im", "\\operatorname{Im}", "Im"],
+        ["arg min", "\\operatorname*{arg\\,min}_{□}", "arg min"],
+        ["sup", "\\sup_{□}", "sup_(□)"], ["inf", "\\inf_{□}", "inf_(□)"],
+        ["Res", "\\operatorname{Res}", "Res"], ["⟨f,g⟩", "\\langle f,g\\rangle", "angle(f,g)"],
+        ["δ(x)", "\\delta(x)", "delta(x)"], ["H(x)", "H(x)", "H(x)"],
+      ]
+    },
+    {
+      title: "Accents & Delimiters",
+      keys: [
+        ["x̂", "\\hat{x}", "hat(x)"], ["x̌", "\\check{x}", "check(x)"],
+        ["x̆", "\\breve{x}", "breve(x)"], ["x⃗", "\\overrightarrow{x}", "overrightarrow(x)"],
+        ["x̲", "\\underline{x}", "underline(x)"], ["x̅", "\\overline{x}", "overline(x)"],
+        ["ẋ", "\\dot{x}", "dot(x)"], ["ẍ", "\\ddot{x}", "dot.double(x)"],
+        ["⟨x⟩", "\\langle x\\rangle", "angle(x)"], ["⌈x⌉", "\\lceil x\\rceil", "ceil(x)"],
+        ["⌊x⌋", "\\lfloor x\\rfloor", "floor(x)"], ["‖x‖", "\\lVert x\\rVert", "norm(x)"],
+      ]
+    },
   ],
 
   // ── Pure math ─────────────────────────────────────────────────────────────
@@ -256,6 +315,38 @@ const KEYBOARDS = {
         ["⊗",  "\\otimes",           "times.circle"],
         ["△",  "\\triangle",         "triangle", "sym diff"],
         ["𝒫",  "\\mathcal{P}",       "cal(P)",   "power set"],
+        ["⊎",  "\\uplus",             "union.plus"],
+        ["⊔",  "\\sqcup",             "union.square"],
+        ["⊓",  "\\sqcap",             "inter.square"],
+        ["⊊",  "\\subsetneq",         "subset.neq"],
+        ["⊋",  "\\supsetneq",         "supset.neq"],
+        ["⊈",  "\\nsubseteq",          "subset.eq.not"],
+        ["⊉",  "\\nsupseteq",          "supset.eq.not"],
+        ["∅",  "\\varnothing",         "nothing"],
+        ["Aᶜ",  "A^{\\complement}",     "A^c",         "complement"],
+        ["A̅",  "\\overline{A}",        "overline(A)", "complement"],
+        ["A∩B=∅", "A\\cap B=\\varnothing", "A inter B = nothing", "disjoint"],
+        ["{x|P(x)}", "\\left\\{x\\mid P(x)\\right\\}", "{x | P(x)}", "set builder"],
+      ]
+    },
+    {
+      title: "Indexed Sets",
+      keys: [
+        ["Aᵢ", "A_i", "A_i", "indexed set"],
+        ["Aᵢⱼ", "A_{ij}", "A_(ij)", "double index"],
+        ["{Aᵢ}ᵢ∈ᴵ", "\\{A_i\\}_{i\\in I}", "{A_i}_(i in I)", "family"],
+        ["⋃ᵢ Aᵢ", "\\bigcup_{i\\in I} A_i", "union_(i in I) A_i", "indexed union"],
+        ["⋂ᵢ Aᵢ", "\\bigcap_{i\\in I} A_i", "inter_(i in I) A_i", "indexed intersection"],
+        ["⋃ᵢ₌₁ⁿ Aᵢ", "\\bigcup_{i=1}^{n} A_i", "union_(i=1)^n A_i"],
+        ["⋂ᵢ₌₁ⁿ Aᵢ", "\\bigcap_{i=1}^{n} A_i", "inter_(i=1)^n A_i"],
+        ["⊔ᵢ Aᵢ", "\\bigsqcup_{i\\in I} A_i", "union.square_(i in I) A_i", "disjoint union"],
+        ["⋃̇ Aᵢ", "\\mathop{\\dot{\\bigcup}}_{i\\in I} A_i", "dot.union", "disjoint union"],
+        ["⋂ᵢ∈ᴵ Aᵢ", "\\bigcap_{i\\in I} A_i", "inter_(i in I) A_i"],
+        ["A×B", "A\\times B", "A times B", "cartesian product"],
+        ["∏ᵢ Aᵢ", "\\prod_{i\\in I} A_i", "product_(i in I) A_i", "product set"],
+        ["|A|", "\\lvert A\\rvert", "norm(A)", "cardinality"],
+        ["Aⁿ", "A^n", "A^n", "cartesian power"],
+        ["Aⁱ", "A^{I}", "A^I", "indexed family"],
       ]
     },
     {
@@ -277,6 +368,27 @@ const KEYBOARDS = {
         ["≜",  "\\triangleq",        "eq.delta",  "defined as"],
         [":=", ":=",                 ":="],
         ["□",  "□",                  "□",         "placeholder"],
+      ]
+    },
+    {
+      title: "Geometry & Topology",
+      keys: [
+        ["⊙", "\\odot", "circle.dot"], ["⊥", "\\perp", "perp"], ["∥", "\\parallel", "parallel"],
+        ["∠", "\\angle", "angle"], ["∡", "\\measuredangle", "angle.arc"], ["⌒", "\\widehat{□}", "widehat(□)"],
+        ["AB⃗", "\\overrightarrow{AB}", "overrightarrow(AB)"], ["∂Ω", "\\partial\\Omega", "partial Omega"],
+        ["int", "\\interior", "interior"], ["cl", "\\overline{□}", "overline(□)"],
+        ["≃", "\\simeq", "simeq"], ["≅", "\\cong", "tilde.eq"],
+      ]
+    },
+    {
+      title: "More Logic",
+      keys: [
+        ["⊻", "\\veebar", "xor"], ["⊼", "\\barwedge", "nand"], ["⊽", "\\barvee", "nor"],
+        ["⊩", "\\Vdash", "tack.r.double"], ["⊪", "\\Vvdash", "tack.r.triple"],
+        ["⊣", "\\dashv", "tack.l"], ["⊬", "\\nvdash", "tack.r.not"], ["⊭", "\\nvDash", "models.not"],
+        ["∴", "\\therefore", "therefore"], ["∵", "\\because", "because"],
+        ["⋀", "\\bigwedge", "and.big"], ["⋁", "\\bigvee", "or.big"],
+        ["□", "\\Box", "square"], ["◇", "\\Diamond", "diamond"],
       ]
     },
   ],
@@ -332,6 +444,14 @@ const KEYBOARDS = {
         ["Γ",         "\\text{Gamma}\\left(□,□\\right)",            "Gamma(□,□)"],
         ["MVN",       "\\mathcal{N}\\left(\\boldsymbol{\\mu},\\boldsymbol{\\Sigma}\\right)", "mvn"],
         ["Dirich",    "\\text{Dir}\\left(\\boldsymbol{\\alpha}\\right)","Dir(α)"],
+      ]
+    },
+    {
+      title: "Inference",
+      keys: [
+        ["H₀", "H_0", "H_0"], ["H₁", "H_1", "H_1"], ["p-value", "p\\text{-value}", "p-value"],
+        ["CI", "\\mathrm{CI}", "upright(CI)"], ["E", "\\mathbb{E}", "EE"], ["Pr", "\\Pr", "Pr"],
+        ["∝", "\\propto", "prop"], ["⊥", "\\perp", "perp"], ["X⫫Y", "X\\perp Y", "X perp Y"],
       ]
     },
   ],
@@ -409,6 +529,7 @@ const SWATCHES = [
 
 const state = {
   activeTab: "basic",
+  activeGroup: 0,
   equation: "",
   theme: "light",
   fontColor: "#09090b",
@@ -431,9 +552,11 @@ const $ = (id) => document.getElementById(id);
 
 const tabList     = document.querySelector(".keyboard-tabs");
 const keyGrid     = $("keyboardGrid");
+const keySearch   = $("keySearch");
+const keyCount    = $("keyCount");
+const groupNav    = $("groupNav");
 const customRow   = $("customRow");
 const editor      = $("equationEditor");
-const preview     = $("equationPreview");
 const toastEl     = $("toast");
 const saveStateEl = $("saveState");
 const modeToggle  = $("modeToggle");
@@ -450,6 +573,8 @@ const customValueIn  = $("customValue");
 let toastTimer  = 0;
 let customSlot  = -1;
 let matrixEnv   = "pmatrix";
+const _fontCache = new Map();
+const _cssCache  = new Map();
 
 // ─── Boot ────────────────────────────────────────────────────────────────────
 
@@ -459,16 +584,15 @@ async function init() {
   await loadState();
 
   configureMathField(editor);
-  configureMathField(preview, true);
 
   renderTabs();
   renderKeyboard();
   renderCustomButtons();
   renderSettings();
   applyTheme();
+  updateKeyboardToggle();
 
   editor.value = state.equation;
-  updatePreview();
   // Show the correct mode indicator on the toolbar button
   updateModeIndicator(state.editorMode ?? "text");
 
@@ -477,6 +601,7 @@ async function init() {
   document.addEventListener("click", onGlobalClick);
   document.addEventListener("keydown", onKeyDown);
   fontSizeSlider.addEventListener("input", onFontSize);
+  keySearch.addEventListener("input", renderKeyboard);
 
   document.querySelectorAll("[data-theme]").forEach((btn) => {
     btn.addEventListener("click", () => setTheme(btn.dataset.theme));
@@ -551,7 +676,19 @@ async function loadState() {
   try {
     const stored = await storage.get(STORAGE_KEY);
     const saved  = stored[STORAGE_KEY];
-    if (saved) Object.assign(state, saved);
+    if (!saved || typeof saved !== "object") return;
+    if (TABS.some((tab) => tab.id === saved.activeTab)) state.activeTab = saved.activeTab;
+    if (typeof saved.equation === "string") state.equation = saved.equation;
+    if (VALID_THEMES.has(saved.theme)) state.theme = saved.theme;
+    if (typeof saved.fontColor === "string" && SWATCHES.includes(saved.fontColor)) {
+      state.fontColor = saved.fontColor;
+    }
+    if (Number.isInteger(saved.fontSize) && saved.fontSize >= 5 && saved.fontSize <= 13) {
+      state.fontSize = saved.fontSize;
+    }
+    if (saved.editorMode === "text" || saved.editorMode === "math") state.editorMode = saved.editorMode;
+    if (Array.isArray(saved.custom)) state.custom = saved.custom.slice(0, 10);
+    if (Array.isArray(saved.history)) state.history = saved.history.filter((item) => typeof item === "string").slice(0, MAX_HISTORY);
   } catch { /* ignore */ }
 }
 
@@ -561,12 +698,18 @@ function scheduleSave() {
   saveStateEl.textContent = "Saving…";
   saveStateEl.classList.add("unsaved");
   clearTimeout(saveDebounce);
-  saveDebounce = setTimeout(() => {
+  saveDebounce = setTimeout(async () => {
     state.equation = editor.value;
     const { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history } = state;
-    storage.set({ [STORAGE_KEY]: { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history } });
-    saveStateEl.textContent = "Saved";
-    saveStateEl.classList.remove("unsaved");
+    try {
+      await storage.set({ [STORAGE_KEY]: { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history } });
+      saveStateEl.textContent = "Saved";
+      saveStateEl.classList.remove("unsaved");
+    } catch {
+      saveStateEl.textContent = "Save failed";
+      saveStateEl.classList.add("unsaved");
+      showToast("Could not save settings");
+    }
   }, 250);
 }
 
@@ -591,8 +734,23 @@ function renderTabs() {
 function renderKeyboard() {
   keyGrid.innerHTML = "";
   const groups = KEYBOARDS[state.activeTab] ?? [];
+  const query = keySearch.value.trim().toLowerCase();
+  let visibleKeys = 0;
+  const visibleGroups = query ? groups : groups.slice(state.activeGroup, state.activeGroup + 1);
 
-  groups.forEach((group) => {
+  groupNav.innerHTML = "";
+  groups.forEach((group, index) => {
+    const btn = document.createElement("button");
+    btn.className = "group-nav-button";
+    btn.type = "button";
+    btn.dataset.group = index;
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", String(!query && index === state.activeGroup));
+    btn.textContent = group.title;
+    groupNav.append(btn);
+  });
+
+  visibleGroups.forEach((group) => {
     const section = document.createElement("section");
     section.className = "key-group";
 
@@ -609,7 +767,12 @@ function renderKeyboard() {
     const keysDiv = document.createElement("div");
     keysDiv.className = "keys";
 
-    group.keys.forEach(([label, latex, typst, hint]) => {
+    group.keys
+      .filter(([label, latex, , hint]) => !query || [label, latex, hint, group.title]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query)))
+      .forEach(([label, latex, typst, hint]) => {
+      visibleKeys++;
       const btn = document.createElement("button");
       btn.type = "button";
 
@@ -632,11 +795,18 @@ function renderKeyboard() {
       if (hint) btn.dataset.hint = hint;
 
       keysDiv.append(btn);
-    });
+      });
 
-    section.append(keysDiv);
-    keyGrid.append(section);
+    if (keysDiv.childElementCount) {
+      section.append(keysDiv);
+      keyGrid.append(section);
+    }
   });
+
+  keyCount.textContent = query ? `${visibleKeys} found` : `${state.activeGroup + 1} / ${groups.length}`;
+  if (!visibleKeys) {
+    keyGrid.innerHTML = `<div class="key-empty">No symbols match “${query.replaceAll("&", "&amp;").replaceAll("<", "&lt;")}"</div>`;
+  }
 }
 
 // ─── Render: custom buttons ───────────────────────────────────────────────────
@@ -712,7 +882,6 @@ function applyTheme() {
 
 function onEditorInput() {
   state.equation = editor.value;
-  updatePreview();
   scheduleSave();
 }
 
@@ -723,9 +892,16 @@ function onGlobalClick(e) {
   // Tab switch
   if (btn.dataset.tab) {
     state.activeTab = btn.dataset.tab;
+    state.activeGroup = 0;
     renderTabs();
     renderKeyboard();
     scheduleSave();
+    return;
+  }
+
+  if (btn.dataset.group !== undefined) {
+    state.activeGroup = Number(btn.dataset.group);
+    renderKeyboard();
     return;
   }
 
@@ -747,6 +923,16 @@ function onGlobalClick(e) {
 }
 
 function onKeyDown(e) {
+  if (e.key === "/" && e.target !== keySearch && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+    e.preventDefault();
+    keySearch.focus();
+    return;
+  }
+  if (e.key === "Escape" && e.target === keySearch && keySearch.value) {
+    keySearch.value = "";
+    renderKeyboard();
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && e.key === "z") {
     e.preventDefault();
     undo();
@@ -767,8 +953,6 @@ async function handleAction(action) {
     case "clear":        clearEquation();        break;
     case "toggle-mode":  toggleMode();           break;
     case "copy-latex":   await copyText(currentLatex(), "LaTeX copied"); break;
-    case "copy-typst":   await copyText(toTypst(currentLatex()), "Typst copied"); break;
-    case "copy-image":   await copyImage();      break;
     case "insert":       await insertIntoPage(); break;
     case "settings":     openSettings();         break;
     case "history":      insertHistory();        break;
@@ -924,13 +1108,6 @@ function insertToken(token) {
   onEditorInput();
 }
 
-// ─── Preview (mixed text + math) ──────────────────────────────────────────────
-
-function updatePreview() {
-  const val = editor.value ?? "";
-  preview.value = val;
-}
-
 function currentLatex() {
   return editor.getValue("latex-without-placeholders");
 }
@@ -939,10 +1116,20 @@ function currentLatex() {
 
 function toggleKeyboard() {
   const panel = $("keyboardPanel");
-  const btn   = $("collapseBtn");
-  const hidden = panel.classList.toggle("is-collapsed");
-  btn.classList.toggle("is-open", !hidden);
-  btn.setAttribute("aria-expanded", String(!hidden));
+  panel.classList.toggle("is-collapsed");
+  updateKeyboardToggle();
+}
+
+function updateKeyboardToggle() {
+  const panel = $("keyboardPanel");
+  const btn = $("collapseBtn");
+  const isHidden = panel.classList.contains("is-collapsed");
+  const isExpanded = !isHidden;
+
+  btn.classList.toggle("is-open", isExpanded);
+  btn.setAttribute("aria-expanded", String(isExpanded));
+  btn.title = isExpanded ? "Hide keyboard" : "Show keyboard";
+  btn.setAttribute("aria-label", isExpanded ? "Hide keyboard" : "Show keyboard");
 }
 
 // ─── Matrix builder ───────────────────────────────────────────────────────────
@@ -1036,33 +1223,86 @@ function saveCustomButton() {
 
 async function copyText(text, message) {
   if (!text.trim()) { showToast("Nothing to copy"); return; }
-  await navigator.clipboard.writeText(text);
-  showToast(message);
-}
-
-async function copyImage() {
-  const latex = currentLatex().trim();
-  if (!latex) { showToast("Nothing to copy"); return; }
   try {
-    const blob = await renderEquationToPng(latex);
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    showToast("Image copied");
-  } catch (err) {
-    console.error("copyImage failed:", err);
-    showToast("Image copy failed");
+    await navigator.clipboard.writeText(text);
+    showToast(message);
+  } catch {
+    showToast("Clipboard access unavailable");
   }
 }
 
-/**
- * Renders a LaTeX string to a crisp PNG Blob.
- *
- * Uses MathLive's convertLatexToMarkup() to get properly typeset HTML,
- * inlines @font-face rules from the already-loaded document stylesheets,
- * wraps everything in an SVG <foreignObject>, draws to a 2× DPR canvas,
- * and exports as PNG. Fonts work because they're already loaded in the
- * extension popup's document — we just re-declare them so the SVG blob
- * renderer can access them.
- */
+// ─── Page insertion ───────────────────────────────────────────────────────────
+
+async function _fetchBase64(url) {
+  if (_fontCache.has(url)) return _fontCache.get(url);
+  const p = _fetchAsset(url, (response) => response.arrayBuffer())
+    .then(buf => {
+      const bytes = new Uint8Array(buf);
+      let binary  = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary);
+    });
+  _fontCache.set(url, p);
+  return p;
+}
+
+async function _fetchText(url) {
+  if (_cssCache.has(url)) return _cssCache.get(url);
+  const p = _fetchAsset(url, (response) => response.text());
+  _cssCache.set(url, p);
+  return p;
+}
+
+async function _fetchAsset(url, read) {
+  const candidates = [url];
+  if (url.includes("/node_modules/mathlive/")) {
+    candidates.push(url.replace("/node_modules/mathlive/", "/mathlive/"));
+  }
+
+  let lastError;
+  for (const candidate of candidates) {
+    try {
+      const response = await fetch(candidate);
+      if (!response.ok) throw new Error(`${response.status} for ${candidate}`);
+      return await read(response);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error(`Failed to fetch MathLive asset: ${lastError?.message ?? url}`);
+}
+
+/** Rewrite all url(fonts/…) references in a CSS string to inline base64 data URIs. */
+async function _inlineFontUrls(css, baseUrl) {
+  // Collect unique relative font paths referenced in the CSS.
+  const fontPaths = [...new Set(
+    [...css.matchAll(/url\(([^)]+\.woff2)\)/g)].map(m =>
+      m[1].replace(/['"]/g, "")
+    )
+  )];
+
+  // Fetch them all in parallel.
+  const base = baseUrl.endsWith("/") ? baseUrl : baseUrl.replace(/\/[^/]*$/, "/");
+  const entries = await Promise.all(
+    fontPaths.map(async (rel) => {
+      const b64 = await _fetchBase64(base + rel);
+      return [rel, b64];
+    })
+  );
+
+  // Replace each url(...) with a data URI.
+  let result = css;
+  for (const [rel, b64] of entries) {
+    // Escape the relative path for use in a regex.
+    const escaped = rel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    result = result.replace(
+      new RegExp(`url\\(['"']?${escaped}['"']?\\)`, "g"),
+      `url("data:font/woff2;base64,${b64}")`
+    );
+  }
+  return result;
+}
+
 async function renderEquationToPng(latex) {
   const { convertLatexToMarkup } = await import("./node_modules/mathlive/mathlive.min.mjs");
 
@@ -1074,51 +1314,71 @@ async function renderEquationToPng(latex) {
   // 1. Typeset HTML
   const mathHtml = convertLatexToMarkup(latex, { mathstyle: "displaystyle" });
 
-  // 2. Measure rendered size in DOM (fonts already loaded here)
+  // 2. Measure rendered size in a real DOM node (fonts already live here)
   const probe = document.createElement("div");
   Object.assign(probe.style, {
-    position: "fixed", left: "-9999px", top: "0",
-    fontSize: `${fontSize}px`, color, background: "white",
-    display: "inline-block", padding: `${PAD}px`,
-    whiteSpace: "nowrap", lineHeight: "1.5", visibility: "hidden",
+    position:   "fixed",
+    left:       "-9999px",
+    top:        "0",
+    fontSize:   `${fontSize}px`,
+    color,
+    background: "white",
+    display:    "inline-block",
+    padding:    `${PAD}px`,
+    whiteSpace: "nowrap",
+    lineHeight: "1.5",
+    visibility: "hidden",
   });
   probe.innerHTML = mathHtml;
   document.body.appendChild(probe);
-  await new Promise((r) => requestAnimationFrame(r));
-  await new Promise((r) => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
   const { width: rw, height: rh } = probe.getBoundingClientRect();
   document.body.removeChild(probe);
-  const W = Math.max(300, Math.ceil(rw));
-  const H = Math.max(100, Math.ceil(rh));
+  const W = Math.max(200, Math.ceil(rw));
+  const H = Math.max(80,  Math.ceil(rh));
 
-  // 3. Collect @font-face rules from loaded stylesheets
-  let fontFaces = "";
-  try {
-    for (const sheet of document.styleSheets) {
-      let rules;
-      try { rules = sheet.cssRules; } catch { continue; }
-      for (const rule of rules) {
-        if (rule instanceof CSSFontFaceRule) fontFaces += rule.cssText + "\n";
-      }
-    }
-  } catch { /* non-critical */ }
+  // 3. Build self-contained SVG — inline fonts + MathLive layout CSS
+  const staticCssUrl = new URL("./node_modules/mathlive/mathlive-static.css", location.href).href;
+  const fontsCssUrl  = new URL("./node_modules/mathlive/mathlive-fonts.css",  location.href).href;
+  const fontsDirUrl  = new URL("./node_modules/mathlive/fonts/",              location.href).href;
 
-  // 4. Build self-contained XHTML for foreignObject
+  const [staticCssRaw, fontsCssRaw] = await Promise.all([
+    _fetchText(staticCssUrl),
+    _fetchText(fontsCssUrl),
+  ]);
+
+  // Inline every woff2 referenced by the fonts CSS.
+  const fontsCssInlined = await _inlineFontUrls(fontsCssRaw, fontsDirUrl);
+
+  // Remove font-display (unsupported inside SVG blobs) to silence console warnings.
+  const cleanFontsCss = fontsCssInlined.replace(/font-display:[^;]+;/g, "");
+
   const xhtml = `<html xmlns="http://www.w3.org/1999/xhtml"><head><style>
-${fontFaces}
+${cleanFontsCss}
+${staticCssRaw}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{width:${W}px;height:${H}px;background:white;
+body{
+  width:${W}px;height:${H}px;
+  background:white;
   display:flex;align-items:center;justify-content:center;
-  font-size:${fontSize}px;color:${color};}
+  font-size:${fontSize}px;color:${color};
+  overflow:hidden;
+}
 </style></head><body>
 <div style="padding:${PAD}px;white-space:nowrap;line-height:1.5;">${mathHtml}</div>
 </body></html>`;
 
-  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-<rect width="${W}" height="${H}" rx="10" fill="white"/>
-<foreignObject x="0" y="0" width="${W}" height="${H}">${xhtml}</foreignObject></svg>`;
+  const svgStr = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">`,
+    `<rect width="${W}" height="${H}" fill="white"/>`,
+    `<foreignObject x="0" y="0" width="${W}" height="${H}">`,
+    xhtml,
+    `</foreignObject>`,
+    `</svg>`,
+  ].join("\n");
 
-  // 5. SVG → canvas → PNG
+  // 4. SVG → canvas → PNG (2× DPR for crisp output)
   return new Promise((resolve, reject) => {
     const canvas  = document.createElement("canvas");
     canvas.width  = W * DPR;
@@ -1136,22 +1396,14 @@ body{width:${W}px;height:${H}px;background:white;
       ctx.drawImage(img, 0, 0, W, H);
       URL.revokeObjectURL(url);
       canvas.toBlob(
-        (png) => png ? resolve(png) : reject(new Error("toBlob failed")),
+        png => png ? resolve(png) : reject(new Error("toBlob returned null")),
         "image/png"
       );
     };
 
-    // Fallback: draw as plain styled text (always readable)
-    img.onerror = () => {
+    img.onerror = (e) => {
       URL.revokeObjectURL(url);
-      ctx.font = `${fontSize}px "Cambria Math", Cambria, Georgia, serif`;
-      ctx.fillStyle = color;
-      ctx.textBaseline = "middle";
-      ctx.fillText(latex, PAD, H / 2);
-      canvas.toBlob(
-        (png) => png ? resolve(png) : reject(new Error("fallback failed")),
-        "image/png"
-      );
+      reject(new Error("SVG image failed to load: " + e));
     };
 
     img.src = url;
@@ -1177,12 +1429,10 @@ async function insertIntoPage() {
     if (result?.result) {
       showToast("Inserted into page");
     } else {
-      await navigator.clipboard.writeText(text);
-      showToast("Copied — no editable field found");
+      await copyText(text, "Copied — no editable field found");
     }
   } catch {
-    await navigator.clipboard.writeText(text);
-    showToast("Copied — page insertion unavailable");
+    await copyText(text, "Copied — page insertion unavailable");
   }
 }
 
@@ -1195,7 +1445,11 @@ function injectText(text) {
     const s = el.selectionStart ?? el.value.length;
     const e = el.selectionEnd   ?? el.value.length;
     el.value = el.value.slice(0, s) + text + el.value.slice(e);
-    el.selectionStart = el.selectionEnd = s + text.length;
+    try {
+      el.selectionStart = el.selectionEnd = s + text.length;
+    } catch {
+      // Some input types (number, email, date, etc.) do not support selectionStart/selectionEnd
+    }
     el.dispatchEvent(new InputEvent("input", { bubbles: true, data: text, inputType: "insertText" }));
     return true;
   }

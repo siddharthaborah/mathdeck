@@ -590,7 +590,6 @@ async function init() {
   renderCustomButtons();
   renderSettings();
   applyTheme();
-  updateKeyboardToggle();
 
   editor.value = state.equation;
   // Show the correct mode indicator on the toolbar button
@@ -614,7 +613,6 @@ async function init() {
   $("matrixCancel").addEventListener("click",  () => matrixDialog.close());
   $("saveCustom").addEventListener("click",    saveCustomButton);
   $("insertMatrix").addEventListener("click",  doInsertMatrix);
-  $("collapseBtn").addEventListener("click",   toggleKeyboard);
 
   // Matrix dialog: rebuild grid on size change
   $("matrixRows").addEventListener("input",  buildMatrixGrid);
@@ -1113,24 +1111,6 @@ function currentLatex() {
 }
 
 // ─── Toggle keyboard ──────────────────────────────────────────────────────────
-
-function toggleKeyboard() {
-  const panel = $("keyboardPanel");
-  panel.classList.toggle("is-collapsed");
-  updateKeyboardToggle();
-}
-
-function updateKeyboardToggle() {
-  const panel = $("keyboardPanel");
-  const btn = $("collapseBtn");
-  const isHidden = panel.classList.contains("is-collapsed");
-  const isExpanded = !isHidden;
-
-  btn.classList.toggle("is-open", isExpanded);
-  btn.setAttribute("aria-expanded", String(isExpanded));
-  btn.title = isExpanded ? "Hide keyboard" : "Show keyboard";
-  btn.setAttribute("aria-label", isExpanded ? "Hide keyboard" : "Show keyboard");
-}
 
 // ─── Matrix builder ───────────────────────────────────────────────────────────
 

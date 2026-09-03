@@ -1079,20 +1079,7 @@ input[type="range"] {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
-/* ── 18. Collapse animation ──────────────────────────────── */
-.keyboard-panel.is-collapsed {
-  display: none;
-}
-
-.collapse-btn {
-  transition: transform 200ms ease;
-}
-
-.collapse-btn.is-open {
-  transform: rotate(180deg);
-}
-
-/* ── 19. Scrollbar polish ────────────────────────────────── */
+/* ── 18. Scrollbar polish ────────────────────────────────── */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;

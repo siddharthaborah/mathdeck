@@ -650,9 +650,8 @@ function configureMathField(mf, readOnly = false) {
   // "text" makes the field behave like a rich-text editor by default:
   // plain typing (including spaces) produces regular text, and math is
   // entered by switching into math mode (Alt+= or the mode button).
-  // Combined with smartMode the field auto-detects math context.
   mf.defaultMode   = state.editorMode ?? "text";
-  mf.smartMode     = true;   // always on — detects math vs text automatically
+  mf.smartMode     = false;
   mf.smartFence    = true;
   mf.removeExtraneousParentheses = true;
   mf.virtualKeyboardMode = "manual";

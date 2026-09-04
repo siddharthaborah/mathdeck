@@ -629,6 +629,11 @@ math-field::part(menu-toggle) {
   display: none;
 }
 
+/* MathLive recalculates the popover position as its suggestions change. */
+#mathlive-suggestion-popover.is-animated {
+  transition: opacity 150ms ease;
+}
+
 /* ── 12. Action / footer bar ─────────────────────────────── */
 .action-bar {
   display: flex;

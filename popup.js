@@ -655,7 +655,7 @@ function configureMathField(mf, readOnly = false) {
   mf.smartFence    = true;
   mf.removeExtraneousParentheses = true;
   mf.virtualKeyboardMode = "manual";
-  mf.placeholder   = "\\text{Write your sentence or equation here…}";
+  mf.placeholder   = "\\text{Type a sentence or equation...}";
 
   // ── Mode-change listener ─────────────────────────────────────────────────
   // Update the badge whenever the mode changes. smartMode fires this often
@@ -790,7 +790,10 @@ function renderKeyboard() {
       btn.dataset.latex = latex;
       btn.dataset.typst = typst ?? latex;
       btn.textContent = label;
-      if (hint) btn.dataset.hint = hint;
+      if (hint) {
+        btn.dataset.hint = hint;
+        btn.title = hint;
+      }
 
       keysDiv.append(btn);
       });

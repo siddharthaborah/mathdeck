@@ -318,12 +318,18 @@ button:focus-visible {
   gap: 4px;
   min-height: 28px;
   margin-bottom: 7px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.group-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .group-nav-button {
-  min-width: 0;
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 76px;
   height: 26px;
   padding: 0 5px;
   overflow: hidden;
@@ -624,12 +630,73 @@ button:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
+math-field::part(placeholder) {
+  color: var(--muted-foreground);
+  font-family: var(--text-font-family);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  opacity: 0.72;
+}
+
 math-field::part(virtual-keyboard-toggle),
 math-field::part(menu-toggle) {
   display: none;
 }
 
 /* MathLive recalculates the popover position as its suggestions change. */
+#mathlive-suggestion-popover {
+  min-width: 190px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  text-align: left;
+  box-shadow: var(--shadow-lg);
+}
+
+#mathlive-suggestion-popover.top-tip::after {
+  border-bottom-color: var(--popover);
+}
+
+#mathlive-suggestion-popover.bottom-tip::after {
+  border-top-color: var(--popover);
+}
+
+#mathlive-suggestion-popover ul {
+  max-height: 220px;
+  padding: 4px;
+}
+
+#mathlive-suggestion-popover li {
+  width: auto;
+  margin: 2px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  column-gap: 12px;
+}
+
+#mathlive-suggestion-popover li:hover,
+#mathlive-suggestion-popover li.is-pressed,
+#mathlive-suggestion-popover li.is-active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+#mathlive-suggestion-popover .ML__popover__current {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+#mathlive-suggestion-popover .ML__popover__command {
+  font-size: 1.25rem;
+}
+
+#mathlive-suggestion-popover .ML__popover__latex {
+  color: inherit;
+}
+
 #mathlive-suggestion-popover.is-animated {
   transition: opacity 150ms ease;
 }

@@ -2,6 +2,8 @@
 
 A Chrome extension for writing and inserting math equations — pure HTML/CSS/JS with a small production build.
 
+![Mathdeck screenshot](images/mathdeck-screenshot.png)
+
 ## Install locally
 
 1. Install Node.js and npm.

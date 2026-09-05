@@ -6,7 +6,7 @@
 
 import "./node_modules/mathlive/mathlive.min.mjs";
 
-MathfieldElement.soundsDirectory = new URL("./sounds/", location.href).href;
+MathfieldElement.soundsDirectory = null;
 
 // ─── Storage ────────────────────────────────────────────────────────────────
 

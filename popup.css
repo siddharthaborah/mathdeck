@@ -64,6 +64,8 @@
   /* Equation */
   --equation-color:     var(--zinc-950);
   --equation-size:      28px;
+  --text-editor-background: #fffdf8;
+  --text-editor-border:     #e7dfd2;
 
   /* Radius scale (shadcn) */
   --radius:    0.5rem;   /* 8px */
@@ -112,6 +114,8 @@
   --key-fg:             var(--zinc-200);
 
   --equation-color:     var(--zinc-50);
+  --text-editor-background: #211f1d;
+  --text-editor-border:     #4a443f;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
@@ -621,8 +625,26 @@ button:focus-visible {
   overflow: auto;
   /* MathLive text-zone highlight — subtle violet tint shows text segments */
   --highlight-text: color-mix(in srgb, var(--primary) 7%, transparent);
-  --text-font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --text-font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --text-font-size: 1em;
+  font-variant-ligatures: common-ligatures;
   transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* Text mode is intentionally more like a writing surface than a formula box. */
+.equation-editor[data-mode="text"] {
+  background: var(--text-editor-background);
+  border-color: var(--text-editor-border);
+  font-size: 23px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+  --highlight-text: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.equation-editor[data-mode="math"] {
+  font-size: var(--equation-size);
+  line-height: 1.45;
+  letter-spacing: normal;
 }
 
 .equation-editor:focus-within {

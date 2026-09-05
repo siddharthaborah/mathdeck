@@ -927,6 +927,11 @@ function onGlobalClick(e) {
 }
 
 function onKeyDown(e) {
+  if (e.altKey && (e.key === "=" || e.code === "Equal")) {
+    e.preventDefault();
+    toggleMode();
+    return;
+  }
   if (e.key === "/" && e.target !== keySearch && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
     e.preventDefault();
     keySearch.focus();
@@ -1034,6 +1039,7 @@ function updateModeIndicator(mode) {
   if (!btn) return;
 
   const isText = mode === "text";
+  editor.dataset.mode = mode;
 
   // Button tooltip + aria
   btn.title = isText

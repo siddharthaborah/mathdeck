@@ -105,14 +105,15 @@
       <footer class="action-bar">
         <div class="action-left">
           <button class="icon-btn" data-action="history" type="button"
-                  title="Recent equations" aria-label="Recent equations">
+              title="Equation library" aria-label="Open equation library">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
               <path d="M7 4 L7 7 L9.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <button class="icon-btn" data-action="favorite" type="button"
-                  title="Favorite" aria-label="Favorite">
+              title="Save current equation" aria-label="Save current equation" id="favoriteButton"
+              aria-pressed="false">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 2 L8.5 5.5 L12.5 5.5 L9.5 7.8 L10.8 11.5 L7 9.2 L3.2 11.5 L4.5 7.8 L1.5 5.5 L5.5 5.5 Z"
                     stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
@@ -297,6 +298,24 @@
           <button class="action-btn ghost" id="matrixCancel" type="button">Cancel</button>
           <button class="action-btn primary" id="insertMatrix" type="button">Insert Matrix</button>
         </div>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- Equation library dialog                             -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <dialog class="library-dialog" id="libraryDialog" aria-labelledby="libraryTitle">
+      <div class="dialog-card">
+        <div class="dialog-head">
+          <h2 class="dialog-title" id="libraryTitle">Equation Library</h2>
+          <button class="dialog-close" id="libraryClose" type="button"
+                  title="Close" aria-label="Close equation library" autofocus>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="library-content" id="libraryContent"></div>
       </div>
     </dialog>
 

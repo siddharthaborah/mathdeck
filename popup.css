@@ -857,7 +857,8 @@ math-field::part(menu-toggle) {
 /* ── 16. Dialogs ─────────────────────────────────────────── */
 .settings-dialog,
 .custom-dialog,
-.matrix-dialog {
+.matrix-dialog,
+.library-dialog {
   width: min(480px, calc(100vw - 32px));
   padding: 0;
   border: none;
@@ -869,7 +870,8 @@ math-field::part(menu-toggle) {
 
 .settings-dialog::backdrop,
 .custom-dialog::backdrop,
-.matrix-dialog::backdrop {
+.matrix-dialog::backdrop,
+.library-dialog::backdrop {
   background: rgba(0 0 0 / 0.5);
   backdrop-filter: blur(2px);
 }
@@ -1069,6 +1071,133 @@ input[type="range"] {
 /* ── 17. Matrix builder dialog ───────────────────────────── */
 .matrix-dialog {
   width: min(440px, calc(100vw - 32px));
+}
+
+.library-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.library-content {
+  display: grid;
+  gap: 18px;
+  max-height: 390px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.library-section {
+  min-width: 0;
+}
+
+.library-section + .library-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.library-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.library-section-title {
+  margin: 0;
+  color: var(--card-foreground);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.library-section-count {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.library-list {
+  display: grid;
+  gap: 6px;
+}
+
+.library-item {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+}
+
+.library-item-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 9px 10px;
+  background: transparent;
+  color: var(--foreground);
+  text-align: left;
+}
+
+.library-item-main:hover {
+  background: var(--accent);
+}
+
+.library-item-label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-item-preview {
+  width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 5px;
+  border-left: 1px solid var(--border);
+}
+
+.library-item-action {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.library-item-action:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.library-item-action[data-favorite-action="delete"]:hover {
+  color: var(--destructive);
+}
+
+.library-empty {
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  font-size: 12px;
 }
 
 .matrix-size-row {

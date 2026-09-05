@@ -19,6 +19,7 @@ const storage = globalThis.chrome?.storage?.local ?? {
 
 const VALID_THEMES = new Set(["light", "dark", "auto"]);
 const MAX_HISTORY = 20;
+const MAX_FAVORITES = 50;
 
 // ─── Tab definitions (chemistry + graph removed) ─────────────────────────────
 
@@ -544,6 +545,7 @@ const state = {
     { label: "⊂",  latex: "\\subset",  typst: "subset" },
   ],
   history: [],
+  favorites: [],
   undo: [],
   redo: [],
 };
@@ -566,6 +568,7 @@ const modeToggle  = $("modeToggle");
 const settingsDialog = $("settingsDialog");
 const customDialog   = $("customDialog");
 const matrixDialog   = $("matrixDialog");
+const libraryDialog  = $("libraryDialog");
 
 const fontSizeSlider = $("fontSize");
 const fontSizeOut    = $("fontSizeOutput");
@@ -596,6 +599,7 @@ async function init() {
   editor.value = state.equation;
   // Show the correct mode indicator on the toolbar button
   updateModeIndicator(state.editorMode ?? "text");
+  updateFavoriteIndicator();
 
   // Events
   editor.addEventListener("input", onEditorInput);
@@ -613,6 +617,7 @@ async function init() {
   $("customCancel").addEventListener("click",  () => customDialog.close());
   $("matrixClose").addEventListener("click",   () => matrixDialog.close());
   $("matrixCancel").addEventListener("click",  () => matrixDialog.close());
+  $("libraryClose").addEventListener("click",  () => libraryDialog.close());
   $("saveCustom").addEventListener("click",    saveCustomButton);
   $("insertMatrix").addEventListener("click",  doInsertMatrix);
 
@@ -669,6 +674,11 @@ function configureMathField(mf, readOnly = false) {
   });
 }
 
+function createFavoriteId() {
+  return globalThis.crypto?.randomUUID?.()
+    ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 // ─── State persistence ───────────────────────────────────────────────────────
 
 async function loadState() {
@@ -688,6 +698,17 @@ async function loadState() {
     if (saved.editorMode === "text" || saved.editorMode === "math") state.editorMode = saved.editorMode;
     if (Array.isArray(saved.custom)) state.custom = saved.custom.slice(0, 10);
     if (Array.isArray(saved.history)) state.history = saved.history.filter((item) => typeof item === "string").slice(0, MAX_HISTORY);
+    if (Array.isArray(saved.favorites)) {
+      state.favorites = saved.favorites
+        .filter((item) => item && typeof item === "object"
+          && typeof item.value === "string" && typeof item.label === "string")
+        .map((item) => ({
+          id: typeof item.id === "string" ? item.id : createFavoriteId(),
+          label: item.label.trim().slice(0, 80) || "Untitled equation",
+          value: item.value,
+        }))
+        .slice(0, MAX_FAVORITES);
+    }
   } catch { /* ignore */ }
 }
 
@@ -699,9 +720,9 @@ function scheduleSave() {
   clearTimeout(saveDebounce);
   saveDebounce = setTimeout(async () => {
     state.equation = editor.value;
-    const { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history } = state;
+    const { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history, favorites } = state;
     try {
-      await storage.set({ [STORAGE_KEY]: { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history } });
+      await storage.set({ [STORAGE_KEY]: { activeTab, equation, theme, fontColor, fontSize, editorMode, custom, history, favorites } });
       saveStateEl.textContent = "Saved";
       saveStateEl.classList.remove("unsaved");
     } catch {
@@ -886,6 +907,7 @@ function applyTheme() {
 
 function onEditorInput() {
   state.equation = editor.value;
+  updateFavoriteIndicator();
   scheduleSave();
 }
 
@@ -906,6 +928,16 @@ function onGlobalClick(e) {
   if (btn.dataset.group !== undefined) {
     state.activeGroup = Number(btn.dataset.group);
     renderKeyboard();
+    return;
+  }
+
+  if (btn.dataset.libraryLoad !== undefined) {
+    loadLibraryValue(btn.dataset.libraryLoad);
+    return;
+  }
+
+  if (btn.dataset.favoriteAction) {
+    handleFavoriteAction(btn.dataset.favoriteAction, btn.dataset.favoriteId);
     return;
   }
 
@@ -964,8 +996,8 @@ async function handleAction(action) {
     case "copy-latex":   await copyText(currentLatex(), "LaTeX copied"); break;
     case "insert":       await insertIntoPage(); break;
     case "settings":     openSettings();         break;
-    case "history":      insertHistory();        break;
-    case "favorite":     showToast("Saved to favorites"); break;
+    case "history":      openLibrary();          break;
+    case "favorite":     saveFavorite();         break;
     case "help":         showToast("Click a field on a page → open Mathdeck → Insert"); break;
     case "open-matrix":  openMatrixDialog();     break;
   }
@@ -1077,6 +1109,172 @@ function insertHistory() {
   const latest = state.history.find(Boolean);
   if (!latest) { showToast("No recent equations"); return; }
   insertToken(latest);
+}
+
+function updateFavoriteIndicator() {
+  const button = $("favoriteButton");
+  if (!button) return;
+  const isSaved = Boolean(editor.value.trim())
+    && state.favorites.some((item) => item.value === editor.value);
+  button.setAttribute("aria-pressed", String(isSaved));
+  button.title = isSaved ? "Remove from favorites" : "Save current equation";
+  button.setAttribute("aria-label", button.title);
+  button.style.background = isSaved
+    ? "color-mix(in srgb, var(--primary) 14%, transparent)"
+    : "";
+  button.style.color = isSaved ? "var(--primary)" : "";
+}
+
+function saveFavorite() {
+  const value = editor.value;
+  if (!value.trim()) {
+    showToast("Type an equation before saving it");
+    return;
+  }
+
+  const existing = state.favorites.find((item) => item.value === value);
+  if (existing) {
+    state.favorites = state.favorites.filter((item) => item.id !== existing.id);
+    showToast("Removed from favorites");
+  } else {
+    state.favorites.unshift({
+      id: createFavoriteId(),
+      label: `Equation ${state.favorites.length + 1}`,
+      value,
+    });
+    state.favorites = state.favorites.slice(0, MAX_FAVORITES);
+    showToast("Saved to favorites");
+  }
+
+  updateFavoriteIndicator();
+  scheduleSave();
+  if (libraryDialog.open) renderLibrary();
+}
+
+function openLibrary() {
+  renderLibrary();
+  libraryDialog.showModal();
+}
+
+function renderLibrary() {
+  const content = $("libraryContent");
+  content.replaceChildren();
+  appendLibrarySection(content, "Favorites", state.favorites, true);
+  appendLibrarySection(content, "Recent", state.history.filter(Boolean), false);
+}
+
+function appendLibrarySection(container, title, items, isFavorite) {
+  const section = document.createElement("section");
+  section.className = "library-section";
+
+  const head = document.createElement("div");
+  head.className = "library-section-head";
+  const heading = document.createElement("h3");
+  heading.className = "library-section-title";
+  heading.textContent = title;
+  const count = document.createElement("span");
+  count.className = "library-section-count";
+  count.textContent = `${items.length}`;
+  head.append(heading, count);
+  section.append(head);
+
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "library-empty";
+    empty.textContent = isFavorite ? "Favorite equations will appear here." : "No recent equations yet.";
+    section.append(empty);
+    container.append(section);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "library-list";
+  items.slice(0, isFavorite ? MAX_FAVORITES : MAX_HISTORY).forEach((item, index) => {
+    const value = isFavorite ? item.value : item;
+    const row = document.createElement("div");
+    row.className = "library-item";
+
+    const load = document.createElement("button");
+    load.className = "library-item-main";
+    load.type = "button";
+    load.dataset.libraryLoad = value;
+    load.title = "Load equation";
+
+    const label = document.createElement("span");
+    label.className = "library-item-label";
+    label.textContent = isFavorite ? item.label : `Recent equation ${index + 1}`;
+    const preview = document.createElement("span");
+    preview.className = "library-item-preview";
+    preview.textContent = libraryPreview(value);
+    load.append(label, preview);
+    row.append(load);
+
+    if (isFavorite) {
+      const actions = document.createElement("div");
+      actions.className = "library-item-actions";
+      actions.append(
+        libraryAction("Rename", "rename", item.id),
+        libraryAction("Delete", "delete", item.id),
+      );
+      row.append(actions);
+    }
+    list.append(row);
+  });
+  section.append(list);
+  container.append(section);
+}
+
+function libraryAction(label, action, id) {
+  const button = document.createElement("button");
+  button.className = "library-item-action";
+  button.type = "button";
+  button.dataset.favoriteAction = action;
+  button.dataset.favoriteId = id;
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.textContent = action === "rename" ? "✎" : "×";
+  return button;
+}
+
+function libraryPreview(value) {
+  const preview = value.replace(/\s+/g, " ").trim();
+  return preview.length > 72 ? `${preview.slice(0, 69)}...` : preview;
+}
+
+function loadLibraryValue(value) {
+  libraryDialog.close();
+  pushUndo();
+  editor.value = value;
+  editor.focus();
+  onEditorInput();
+  showToast("Equation loaded");
+}
+
+function handleFavoriteAction(action, id) {
+  const favorite = state.favorites.find((item) => item.id === id);
+  if (!favorite) return;
+
+  if (action === "rename") {
+    const label = globalThis.prompt("Rename favorite", favorite.label);
+    if (label === null) return;
+    const nextLabel = label.trim().slice(0, 80);
+    if (!nextLabel) {
+      showToast("A favorite needs a name");
+      return;
+    }
+    favorite.label = nextLabel;
+    scheduleSave();
+    renderLibrary();
+    return;
+  }
+
+  if (action === "delete" && globalThis.confirm(`Delete “${favorite.label}”?`)) {
+    state.favorites = state.favorites.filter((item) => item.id !== id);
+    scheduleSave();
+    updateFavoriteIndicator();
+    renderLibrary();
+    showToast("Favorite deleted");
+  }
 }
 
 function openSettings() {

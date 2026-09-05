@@ -1046,6 +1046,7 @@ function updateModeIndicator(mode) {
     ? "Text mode — spaces work normally. Click or Alt+= for Math"
     : "Math mode — click or Alt+= to return to Text";
   btn.setAttribute("aria-label", isText ? "Switch to math mode" : "Switch to text mode");
+  btn.setAttribute("aria-pressed", String(isText));
 
   // Button highlight
   btn.style.background = isText

@@ -557,6 +557,7 @@ const $ = (id) => document.getElementById(id);
 const tabList     = document.querySelector(".keyboard-tabs");
 const keyGrid     = $("keyboardGrid");
 const keySearch   = $("keySearch");
+const keySearchClear = $("keySearchClear");
 const keyCount    = $("keyCount");
 const groupNav    = $("groupNav");
 const customRow   = $("customRow");
@@ -566,6 +567,7 @@ const saveStateEl = $("saveState");
 const modeToggle  = $("modeToggle");
 
 const settingsDialog = $("settingsDialog");
+const helpDialog     = $("helpDialog");
 const customDialog   = $("customDialog");
 const matrixDialog   = $("matrixDialog");
 const libraryDialog  = $("libraryDialog");
@@ -606,13 +608,24 @@ async function init() {
   document.addEventListener("click", onGlobalClick);
   document.addEventListener("keydown", onKeyDown);
   fontSizeSlider.addEventListener("input", onFontSize);
-  keySearch.addEventListener("input", renderKeyboard);
+  keySearch.addEventListener("input", () => {
+    renderKeyboard();
+    if (keySearchClear) keySearchClear.hidden = !keySearch.value.trim();
+  });
+  keySearchClear?.addEventListener("click", () => {
+    keySearch.value = "";
+    renderKeyboard();
+    keySearch.focus();
+    keySearchClear.hidden = true;
+  });
+  keySearchClear.hidden = !keySearch.value.trim();
 
   document.querySelectorAll("[data-theme]").forEach((btn) => {
     btn.addEventListener("click", () => setTheme(btn.dataset.theme));
   });
 
   $("settingsClose").addEventListener("click", () => settingsDialog.close());
+  $("helpClose").addEventListener("click",     () => helpDialog.close());
   $("customClose").addEventListener("click",   () => customDialog.close());
   $("customCancel").addEventListener("click",  () => customDialog.close());
   $("matrixClose").addEventListener("click",   () => matrixDialog.close());
@@ -755,8 +768,9 @@ function renderKeyboard() {
   keyGrid.innerHTML = "";
   const groups = KEYBOARDS[state.activeTab] ?? [];
   const query = keySearch.value.trim().toLowerCase();
+  const isSearchActive = Boolean(query);
   let visibleKeys = 0;
-  const visibleGroups = query ? groups : groups.slice(state.activeGroup, state.activeGroup + 1);
+  const visibleGroups = isSearchActive ? groups : groups.slice(state.activeGroup, state.activeGroup + 1);
 
   groupNav.innerHTML = "";
   groups.forEach((group, index) => {
@@ -765,7 +779,7 @@ function renderKeyboard() {
     btn.type = "button";
     btn.dataset.group = index;
     btn.setAttribute("role", "tab");
-    btn.setAttribute("aria-selected", String(!query && index === state.activeGroup));
+    btn.setAttribute("aria-selected", String(!isSearchActive && index === state.activeGroup));
     btn.textContent = group.title;
     groupNav.append(btn);
   });
@@ -827,7 +841,8 @@ function renderKeyboard() {
 
   keyCount.textContent = query ? `${visibleKeys} found` : `${state.activeGroup + 1} / ${groups.length}`;
   if (!visibleKeys) {
-    keyGrid.innerHTML = `<div class="key-empty">No symbols match “${query.replaceAll("&", "&amp;").replaceAll("<", "&lt;")}"</div>`;
+    const searchText = query || "current filter";
+    keyGrid.innerHTML = `<div class="key-empty">No symbols match “${searchText.replaceAll("&", "&amp;").replaceAll("<", "&lt;")}". Try a broader search or switch tabs.</div>`;
   }
 }
 
@@ -998,7 +1013,7 @@ async function handleAction(action) {
     case "settings":     openSettings();         break;
     case "history":      openLibrary();          break;
     case "favorite":     saveFavorite();         break;
-    case "help":         showToast("Click a field on a page → open Mathdeck → Insert"); break;
+    case "help":         openHelp();             break;
     case "open-matrix":  openMatrixDialog();     break;
   }
 }
@@ -1280,6 +1295,10 @@ function handleFavoriteAction(action, id) {
 function openSettings() {
   renderSettings();
   settingsDialog.showModal();
+}
+
+function openHelp() {
+  helpDialog.showModal();
 }
 
 function setTheme(t) {

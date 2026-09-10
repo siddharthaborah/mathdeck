@@ -33,8 +33,12 @@
       <section class="keyboard-panel" id="keyboardPanel" aria-label="Math keys">
         <div class="keyboard-tools">
           <label class="key-search-label" for="keySearch">Find a symbol</label>
-          <input class="key-search" id="keySearch" type="search"
-                 placeholder="Search symbols or LaTeX..." autocomplete="off" />
+          <div class="search-shell">
+            <input class="key-search" id="keySearch" type="search"
+                   placeholder="Search symbols or LaTeX..." autocomplete="off" />
+            <button class="search-clear" id="keySearchClear" type="button"
+                    aria-label="Clear search" title="Clear search">×</button>
+          </div>
           <span class="key-count" id="keyCount" aria-live="polite"></span>
         </div>
         <div class="group-nav" id="groupNav" role="tablist" aria-label="Symbol group"></div>
@@ -218,6 +222,54 @@
         <p class="settings-note">
           Color and size apply to the rendered equation and LaTeX output.
         </p>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- Help dialog                                         -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <dialog class="help-dialog" id="helpDialog" aria-labelledby="helpTitle">
+      <div class="dialog-card">
+        <div class="dialog-head">
+          <h2 class="dialog-title" id="helpTitle">Quick help</h2>
+          <button class="dialog-close" id="helpClose" type="button"
+                  title="Close" aria-label="Close help dialog">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="help-grid">
+          <section class="help-card">
+            <h3>Quick start</h3>
+            <ul>
+              <li>Use <strong>Alt+=</strong> to switch between text and math mode.</li>
+              <li>Search symbols by label, LaTeX, or hint text.</li>
+              <li>Click <strong>Insert</strong> to send the equation into the focused field.</li>
+            </ul>
+          </section>
+
+          <section class="help-card">
+            <h3>Keyboard shortcuts</h3>
+            <ul class="shortcut-list">
+              <li><span>Alt+=</span><em>Toggle mode</em></li>
+              <li><span>/</span><em>Focus search</em></li>
+              <li><span>Esc</span><em>Clear search</em></li>
+              <li><span>Ctrl/Cmd + Z</span><em>Undo</em></li>
+              <li><span>Ctrl/Cmd + Y</span><em>Redo</em></li>
+            </ul>
+          </section>
+
+          <section class="help-card">
+            <h3>Workflow tips</h3>
+            <ul>
+              <li>Save favorites for repeated formulas and equations.</li>
+              <li>Use the library to revisit recent expressions.</li>
+              <li>Switch themes and color settings to keep the editor readable.</li>
+            </ul>
+          </section>
+        </div>
       </div>
     </dialog>
 

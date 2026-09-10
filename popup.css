@@ -283,6 +283,12 @@ button:focus-visible {
   margin-bottom: 8px;
 }
 
+.search-shell {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
 .key-search-label {
   position: absolute;
   width: 1px;
@@ -293,10 +299,10 @@ button:focus-visible {
 }
 
 .key-search {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   height: 30px;
-  padding: 0 10px;
+  padding: 0 32px 0 10px;
   border: 1px solid var(--input);
   border-radius: var(--radius-sm);
   background: var(--background);
@@ -307,6 +313,34 @@ button:focus-visible {
 .key-search:focus {
   border-color: var(--ring);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.search-shell:focus-within .search-clear,
+.search-clear:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.search-clear:hover {
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .key-count {
@@ -858,7 +892,8 @@ math-field::part(menu-toggle) {
 .settings-dialog,
 .custom-dialog,
 .matrix-dialog,
-.library-dialog {
+.library-dialog,
+.help-dialog {
   width: min(480px, calc(100vw - 32px));
   padding: 0;
   border: none;
@@ -871,7 +906,8 @@ math-field::part(menu-toggle) {
 .settings-dialog::backdrop,
 .custom-dialog::backdrop,
 .matrix-dialog::backdrop,
-.library-dialog::backdrop {
+.library-dialog::backdrop,
+.help-dialog::backdrop {
   background: rgba(0 0 0 / 0.5);
   backdrop-filter: blur(2px);
 }

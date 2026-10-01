@@ -546,8 +546,6 @@ const state = {
   ],
   history: [],
   favorites: [],
-  undo: [],
-  redo: [],
 };
 
 // ─── DOM refs ────────────────────────────────────────────────────────────────
@@ -602,6 +600,7 @@ async function init() {
   // Show the correct mode indicator on the toolbar button
   updateModeIndicator(state.editorMode ?? "text");
   updateFavoriteIndicator();
+  updateActionAvailability();
 
   // Events
   editor.addEventListener("input", onEditorInput);
@@ -754,9 +753,9 @@ function renderTabs() {
     const btn = document.createElement("button");
     btn.className = "tab-button";
     btn.type = "button";
-    btn.setAttribute("role", "tab");
     btn.dataset.tab = tab.id;
-    btn.setAttribute("aria-selected", tab.id === state.activeTab ? "true" : "false");
+    btn.setAttribute("aria-pressed", tab.id === state.activeTab ? "true" : "false");
+    btn.setAttribute("aria-label", `${tab.label} keyboard`);
     btn.innerHTML = `<span class="tab-icon" aria-hidden="true">${tab.icon}</span><span>${tab.label}</span>`;
     tabList.append(btn);
   });
@@ -778,8 +777,7 @@ function renderKeyboard() {
     btn.className = "group-nav-button";
     btn.type = "button";
     btn.dataset.group = index;
-    btn.setAttribute("role", "tab");
-    btn.setAttribute("aria-selected", String(!isSearchActive && index === state.activeGroup));
+    btn.setAttribute("aria-pressed", String(!isSearchActive && index === state.activeGroup));
     btn.textContent = group.title;
     groupNav.append(btn);
   });
@@ -818,6 +816,7 @@ function renderKeyboard() {
       if (latex === "__MATRIX__") {
         btn.textContent = "Matrix";
         btn.dataset.action = "open-matrix";
+        btn.setAttribute("aria-label", "Open matrix builder");
         keysDiv.append(btn);
         return;
       }
@@ -825,6 +824,7 @@ function renderKeyboard() {
       btn.dataset.latex = latex;
       btn.dataset.typst = typst ?? latex;
       btn.textContent = label;
+      btn.setAttribute("aria-label", `Insert ${hint || label}${hint ? ` (${label})` : ""}`);
       if (hint) {
         btn.dataset.hint = hint;
         btn.title = hint;
@@ -862,10 +862,12 @@ function renderCustomButtons() {
       btn.dataset.latex = item.latex;
       btn.dataset.typst = item.typst ?? item.latex;
       btn.title = item.latex;
+      btn.setAttribute("aria-label", `Insert custom symbol ${item.label}`);
     } else {
       btn.className = "add-custom";
       btn.textContent = "+";
       btn.title = "Add custom button";
+      btn.setAttribute("aria-label", `Add custom symbol in slot ${i + 1}`);
     }
     customRow.append(btn);
   }
@@ -923,6 +925,7 @@ function applyTheme() {
 function onEditorInput() {
   state.equation = editor.value;
   updateFavoriteIndicator();
+  updateActionAvailability();
   scheduleSave();
 }
 
@@ -936,6 +939,7 @@ function onGlobalClick(e) {
     state.activeGroup = 0;
     renderTabs();
     renderKeyboard();
+    restoreControlFocus(tabList, "tab", state.activeTab);
     scheduleSave();
     return;
   }
@@ -943,6 +947,7 @@ function onGlobalClick(e) {
   if (btn.dataset.group !== undefined) {
     state.activeGroup = Number(btn.dataset.group);
     renderKeyboard();
+    restoreControlFocus(groupNav, "group", state.activeGroup);
     return;
   }
 
@@ -974,6 +979,12 @@ function onGlobalClick(e) {
 }
 
 function onKeyDown(e) {
+  const toolbar = e.target.closest?.(".keyboard-tabs, .group-nav");
+  if (toolbar && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) {
+    e.preventDefault();
+    moveToolbarFocus(toolbar, e.key);
+    return;
+  }
   if (e.altKey && (e.key === "=" || e.code === "Equal")) {
     e.preventDefault();
     toggleMode();
@@ -989,13 +1000,10 @@ function onKeyDown(e) {
     renderKeyboard();
     return;
   }
-  if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();
-    undo();
-  }
-  if ((e.ctrlKey || e.metaKey) && e.key === "y") {
-    e.preventDefault();
-    redo();
+    if (currentLatex().trim()) void insertIntoPage();
+    return;
   }
 }
 
@@ -1024,36 +1032,58 @@ function newEquation() {
     state.history.unshift(editor.value);
     state.history = [...new Set(state.history)].slice(0, 20);
   }
-  pushUndo();
-  editor.value = "";
-  onEditorInput();
+  if (editor.executeCommand("deleteAll")) onEditorInput();
   showToast("New equation");
 }
 
+function restoreControlFocus(container, dataName, value) {
+  requestAnimationFrame(() => {
+    const control = [...container.querySelectorAll("button")]
+      .find((button) => button.dataset[dataName] === String(value));
+    control?.focus();
+  });
+}
+
+function updateActionAvailability() {
+  const hasContent = Boolean(currentLatex().trim());
+  const states = {
+    new: hasContent,
+    clear: hasContent,
+    "copy-latex": hasContent,
+    insert: hasContent,
+    undo: editor.canUndo(),
+    redo: editor.canRedo(),
+  };
+
+  Object.entries(states).forEach(([action, enabled]) => {
+    const button = document.querySelector(`[data-action="${action}"]`);
+    if (button) button.disabled = !enabled;
+  });
+}
+
 function clearEquation() {
-  pushUndo();
-  editor.value = "";
-  onEditorInput();
+  if (editor.executeCommand("deleteAll")) onEditorInput();
 }
 
 function undo() {
-  if (!state.undo.length) return;
-  state.redo.push(editor.value);
-  editor.value = state.undo.pop();
-  onEditorInput();
+  if (editor.executeCommand("undo")) onEditorInput();
+  editor.focus();
 }
 
 function redo() {
-  if (!state.redo.length) return;
-  state.undo.push(editor.value);
-  editor.value = state.redo.pop();
-  onEditorInput();
+  if (editor.executeCommand("redo")) onEditorInput();
+  editor.focus();
 }
 
-function pushUndo() {
-  state.undo.push(editor.value);
-  state.undo = state.undo.slice(-60);
-  state.redo = [];
+function moveToolbarFocus(toolbar, key) {
+  const controls = [...toolbar.querySelectorAll("button:not(:disabled)")];
+  if (!controls.length) return;
+
+  const current = controls.indexOf(document.activeElement);
+  const targetIndex = key === "Home" ? 0
+    : key === "End" ? controls.length - 1
+    : (current + (key === "ArrowRight" ? 1 : -1) + controls.length) % controls.length;
+  controls[targetIndex]?.click();
 }
 
 function toggleMode() {
@@ -1258,7 +1288,6 @@ function libraryPreview(value) {
 
 function loadLibraryValue(value) {
   libraryDialog.close();
-  pushUndo();
   editor.value = value;
   editor.focus();
   onEditorInput();
@@ -1318,7 +1347,6 @@ function onFontSize() {
 // ─── Token insertion ──────────────────────────────────────────────────────────
 
 function insertToken(token) {
-  pushUndo();
   editor.focus();
 
   // Use mode:"math" in insert options so MathLive parses the LaTeX as math
